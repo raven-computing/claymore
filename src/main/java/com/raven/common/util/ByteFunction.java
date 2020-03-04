@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2019 Raven Computing
+ * Copyright (C) 2020 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-package com.raven.common.io;
-
-import com.raven.common.struct.DataFrame;
+package com.raven.common.util;
 
 /**
- * Functional interface defining a callback for concurrently 
- * reading files and representing the content as a DataFrame.
+ * A function which takes bytes as its input and outputs bytes.
  * 
  * @author Phil Gaiser
+ * @since 3.0.0
  *
  */
 @FunctionalInterface
-public interface ConcurrentReader {
-	
-	/**
-	 * Called when a concurrent reading operation has finished, 
-	 * passing the result in form of a DataFrame as an argument 
-	 * to this method
-	 * 
-	 * @param df The DataFrame holding the content of the file read
-	 */
-	void onRead(DataFrame df);
-
+public interface ByteFunction {
+    
+    /**
+     * Applies this function to the input argument
+     * 
+     * @param input The input bytes for this function
+     * @return The resulting bytes of this function applied to the specified bytes
+     */
+    public byte[] apply(byte[] input);
+    
 }

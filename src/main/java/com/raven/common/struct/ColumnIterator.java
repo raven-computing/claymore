@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2019 Raven Computing
+ * Copyright (C) 2020 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,26 +27,26 @@ import java.util.Iterator;
  *
  */
 public class ColumnIterator implements Iterator<Column> {
-	
-	private DataFrame df;
-	private int ptr = 0;
 
-	/**
-	 * Constructs a new <code>ColumnIterator</code> from the given DataFame
-	 * 
-	 * @param df The DataFrame to construct an iterator from
-	 */
-	protected ColumnIterator(final DataFrame df){
-		this.df = df;
-	}
+    private DataFrame df;
+    private int ptr = 0;
 
-	@Override
-	public boolean hasNext() {
-		return (ptr != df.columns());
-	}
+    /**
+     * Constructs a new <code>ColumnIterator</code> from the given DataFame
+     * 
+     * @param df The DataFrame to construct an iterator from
+     */
+    protected ColumnIterator(final DataFrame df){
+        this.df = df;
+    }
 
-	@Override
-	public Column next(){
-		return df.getColumnAt(ptr++);
-	}
+    @Override
+    public boolean hasNext() {
+        return (ptr != df.columns());
+    }
+
+    @Override
+    public Column next(){
+        return df.getColumnAt(ptr++);
+    }
 }

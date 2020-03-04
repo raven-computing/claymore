@@ -1,3 +1,35 @@
+#### 3.0.1
+* Added BitVector implementation
+* Added ProbabilisticSet interface and implementing BloomFilter classes 
+* Added Item, WritableItem, FinalItem and ObservableItem classes
+* Added Bit class with static constants
+* Added Serializer interface
+* Added StringSerializer class
+* Added DataFrameSerializerInstance class
+* Added SerializationException class
+* Added ArgumentParser optional methods to remove boolean trap
+* Added Actable, Action and TimedAction interfaces
+* Added FutureAction class
+* Added Chronometer support for FutureActions
+* Added ByteFunction interface
+* Added getType() method in abstract Column class
+* Added BinaryColumn and NullableBinaryColumn classes to DataFrame API
+* Added withHeader() method to CSVReader and CSVWriter class and remove boolean trap from constructor
+* Added DataFrameSerializer and CSVReader CSVWriter read and write support from input/outputStreams
+* Added ConfigurationFile complete review
+* Added ConfigurationFile and PropertiesFile read and write support from input/outputStreams
+* Added Hash class with static utility methods
+* Added HashFunction enum
+* Changed DataFrame addRow() and such method argument to varargs
+* Changed indexOfAll() method in DataFrame API to return an empty array if nothing found
+* Changed clone() return type to Column in abstract Column class
+* Changed ConfigurationFile.Section class to be iterable
+* Changed return type to CompletableFuture for async methods in CSVReader, CSVWriter and DataFrameSerializer
+* Fixed Chronometer formatting bug for elapsed hours
+* Fixed bug in equals() method in DefaultDataFrame and NullableDataFrame implementation
+* Refactored static DateFrame utility methods to DataFrameUtil class
+* Removed ConcurrentReader and ConcurrentWriter interfaces
+
 #### 2.5.0
 * Namespace change from *com.kilo52.common* to *com.raven.common*
 * Added serialization support for the DataFrame version 2 binary format (v2)

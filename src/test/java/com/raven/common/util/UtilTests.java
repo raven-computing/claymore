@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2019 Raven Computing
+ * Copyright (C) 2020 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,11 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ArgumentParserTest.class})
+@SuiteClasses({
+    ArgumentParserTest.class,
+    FutureActionTest.class,
+    ChronometerTest.class,
+    HashTest.class})
 public class UtilTests {
-
+    
 }

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2019 Raven Computing
+ * Copyright (C) 2020 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,127 +21,125 @@ import com.raven.common.struct.RowItem;
 
 /**
  * Dummy class for row annotation tests with DefaultDataFrames.
- * 
- * @author Phil Gaiser
  *
  */
 public class RowDummyDefault implements Row {
 
-	@RowItem("BYTE")
-	private byte mByte = 1;
-	
-	@RowItem("SHORT")
-	private short mShort = 2;
-	
-	@RowItem("INT")
-	private int mInt = 3;
-	
-	@RowItem("LONG")
-	private long mLong = 4l;
-	
-	@RowItem("STRING")
-	private String mString = "A5";
-	
-	@RowItem("CHAR")
-	private char mChar = 'B';
-	
-	@RowItem("FLOAT")
-	private float mFloat = 7.2f;
-	
-	@RowItem("DOUBLE")
-	private double mDouble = 8.3;
-	
-	@RowItem("BOOLEAN")
-	private boolean mBoolean = true;
-	
-	public RowDummyDefault(){
-		
-	}
-	
-	public RowDummyDefault(byte mByte, short mShort, int mInt, long mLong, String mString, Character mChar,
-			float mFloat, double mDouble, boolean mBoolean){
-		
-		this.mByte = mByte;
-		this.mShort = mShort;
-		this.mInt = mInt;
-		this.mLong = mLong;
-		this.mString = mString;
-		this.mChar = mChar;
-		this.mFloat = mFloat;
-		this.mDouble = mDouble;
-		this.mBoolean = mBoolean;
-	}
+    @RowItem("BYTE")
+    private byte mByte = 1;
 
-	public byte getmByte(){
-		return mByte;
-	}
+    @RowItem("SHORT")
+    private short mShort = 2;
 
-	public void setmByte(byte mByte){
-		this.mByte = mByte;
-	}
+    @RowItem("INT")
+    private int mInt = 3;
 
-	public short getmShort(){
-		return mShort;
-	}
+    @RowItem("LONG")
+    private long mLong = 4l;
 
-	public void setmShort(short mShort){
-		this.mShort = mShort;
-	}
+    @RowItem("STRING")
+    private String mString = "A5";
 
-	public int getmInt(){
-		return mInt;
-	}
+    @RowItem("CHAR")
+    private char mChar = 'B';
 
-	public void setmInt(int mInt){
-		this.mInt = mInt;
-	}
+    @RowItem("FLOAT")
+    private float mFloat = 7.2f;
 
-	public long getmLong(){
-		return mLong;
-	}
+    @RowItem("DOUBLE")
+    private double mDouble = 8.3;
 
-	public void setmLong(long mLong){
-		this.mLong = mLong;
-	}
+    @RowItem("BOOLEAN")
+    private boolean mBoolean = true;
 
-	public String getmString(){
-		return mString;
-	}
+    public RowDummyDefault(){
 
-	public void setmString(String mString){
-		this.mString = mString;
-	}
+    }
 
-	public Character getmChar(){
-		return mChar;
-	}
+    public RowDummyDefault(byte mByte, short mShort, int mInt, long mLong, String mString, Character mChar,
+            float mFloat, double mDouble, boolean mBoolean){
 
-	public void setmChar(Character mChar){
-		this.mChar = mChar;
-	}
+        this.mByte = mByte;
+        this.mShort = mShort;
+        this.mInt = mInt;
+        this.mLong = mLong;
+        this.mString = mString;
+        this.mChar = mChar;
+        this.mFloat = mFloat;
+        this.mDouble = mDouble;
+        this.mBoolean = mBoolean;
+    }
 
-	public float getmFloat(){
-		return mFloat;
-	}
+    public byte getmByte(){
+        return mByte;
+    }
 
-	public void setmFloat(float mFloat){
-		this.mFloat = mFloat;
-	}
+    public void setmByte(byte mByte){
+        this.mByte = mByte;
+    }
 
-	public double getmDouble(){
-		return mDouble;
-	}
+    public short getmShort(){
+        return mShort;
+    }
 
-	public void setmDouble(double mDouble){
-		this.mDouble = mDouble;
-	}
+    public void setmShort(short mShort){
+        this.mShort = mShort;
+    }
 
-	public boolean ismBoolean(){
-		return mBoolean;
-	}
+    public int getmInt(){
+        return mInt;
+    }
 
-	public void setmBoolean(boolean mBoolean){
-		this.mBoolean = mBoolean;
-	}
+    public void setmInt(int mInt){
+        this.mInt = mInt;
+    }
+
+    public long getmLong(){
+        return mLong;
+    }
+
+    public void setmLong(long mLong){
+        this.mLong = mLong;
+    }
+
+    public String getmString(){
+        return mString;
+    }
+
+    public void setmString(String mString){
+        this.mString = mString;
+    }
+
+    public Character getmChar(){
+        return mChar;
+    }
+
+    public void setmChar(Character mChar){
+        this.mChar = mChar;
+    }
+
+    public float getmFloat(){
+        return mFloat;
+    }
+
+    public void setmFloat(float mFloat){
+        this.mFloat = mFloat;
+    }
+
+    public double getmDouble(){
+        return mDouble;
+    }
+
+    public void setmDouble(double mDouble){
+        this.mDouble = mDouble;
+    }
+
+    public boolean ismBoolean(){
+        return mBoolean;
+    }
+
+    public void setmBoolean(boolean mBoolean){
+        this.mBoolean = mBoolean;
+    }
 
 }

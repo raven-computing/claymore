@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2019 Raven Computing
+ * Copyright (C) 2020 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,174 +46,216 @@ package com.raven.common.struct;
  * 
  */
 public abstract class Column implements Cloneable {
-	
-	/** The label of the column **/
-	protected String name;
 
-	/**
-	 * Gets the value at the specified index
-	 * 
-	 * @param index The index of the value to get
-	 * @return The value at the specified index as an Object
-	 * @throws ArrayIndexOutOfBoundsException If the specified index is out of bounds
-	 */
-	public abstract Object getValueAt(int index);
-	
-	/**
-	 * Sets the value at the specified index
-	 * 
-	 * @param index The index of the value to set
-	 * @param value The value to set at the specified position
-	 * @throws ArrayIndexOutOfBoundsException If the specified index is out of bounds
-	 * @throws ClassCastException If the Object provided cannot be cast to the type 
-	 * 		   this Column object can hold
-	 */
-	public abstract void setValueAt(int index, Object value);
-	
-	/**
-	 * Returns the unique type code of this column
-	 * 
-	 * @return The type code of this <code>Column</code>
-	 */
-	public abstract byte typeCode();
-	
-	/**
-	 * Indicates whether this column accepts null values. This method can be used
-	 * instead of <br>
-	 * <code>column instanceof NullableColumn</code>.<br>
-	 * If this method returns true, then the above statement will be true as well
-	 * 
-	 * @return True if this <code>Column</code> can work with null values, false if
-	 *         using null values with this <code>Column</code> will result in
-	 *         exceptions during runtime
-	 */
-	public abstract boolean isNullable();
-	
-	/**
-	 * Gets the label of this column.<br> 
-	 * That is the name by which this column instance can
-	 * be referenced when using DataFrame API calls
-	 * 
-	 * @return The name of this <code>Column</code>
-	 */
-	public String getName(){
-		return this.name;
-	}
-	
-	/**
-	 * Creates and returns a copy of this Column
-	 * 
-	 * @return A copy of this Column
-	 * @see java.lang.Object#clone()
-	 */
-	@Override
-	public abstract Object clone();
-	
-	/**
-	 * Inserts the specified value at the given index into the column. Shifts all 
-	 * entries currently at that position and any subsequent entries down 
-	 * (adds one to their indices)
-	 * 
-	 * @param index The index to insert the value at
-	 * @param next The index of the next free position
-	 * @param value The value to insert
-	 */
-	protected abstract void insertValueAt(int index, int next, Object value);
-	
-	/**
-	 * Removes all entries from the first index given, to the second index.
-	 * Shifts all entries currently next to the last position removed and any 
-	 * subsequent entries up
-	 * 
-	 * @param from The index from which to start removing (inclusive)
-	 * @param to The index to which to remove to (exclusive)
-	 * @param next The index of the next free position
-	 */
-	protected abstract void remove(int from, int to, int next);
-	
-	/**
-	 * Returns the current capacity of this column, i.e. the length of its
-	 * internal array
-	 * 
-	 * @return The capacity of this column
-	 */
-	protected abstract int capacity();
-	
-	/**
-	 * Returns the class of the entries this Column can hold and operate with
-	 * 
-	 * @return The class type of the entries
-	 */
-	protected abstract Class<?> memberClass();
-	
-	/**
-	 * Resizes the internal array holding the column entries according to its 
-	 * resizing strategy
-	 */
-	protected abstract void resize();
-	
-	/**
-	 * Resizes the internal array to match the given length
-	 * 
-	 * @param length The length to resize the column to
-	 */
-	protected abstract void matchLength(int length);
-	
-	/**
-	 * Creates a new <code>Column</code> instance with the specified type code.<br>
-	 * This method can be used to construct an empty column which has the same type
-	 * as another column but is not a copy of that column's content.<br>
-	 * <pre>
-	 * Column col = Column.ofType(someOtherCol.typeCode());
-	 * </pre>
-	 * The above statement will construct a column which has the same type as 
-	 * <i>someOtherCol</i> but is completely empty regardless of the content of 
-	 * the other column
-	 * 
-	 * @param typeCode The unique type code of the <code>Column</code> to create 
-	 * @return An empty <code>Column</code> of the specified type
-	 */
-	public static final Column ofType(final byte typeCode){
-		switch(typeCode){
-		case ByteColumn.TYPE_CODE:
-			return new ByteColumn();
-		case ShortColumn.TYPE_CODE:
-			return new ShortColumn();
-		case IntColumn.TYPE_CODE:
-			return new IntColumn();
-		case LongColumn.TYPE_CODE:
-			return new LongColumn();
-		case StringColumn.TYPE_CODE:
-			return new StringColumn();
-		case FloatColumn.TYPE_CODE:
-			return new FloatColumn();
-		case DoubleColumn.TYPE_CODE:
-			return new DoubleColumn();
-		case CharColumn.TYPE_CODE:
-			return new CharColumn();
-		case BooleanColumn.TYPE_CODE:
-			return new BooleanColumn();
-		case NullableByteColumn.TYPE_CODE:
-			return new NullableByteColumn();
-		case NullableShortColumn.TYPE_CODE:
-			return new NullableShortColumn();
-		case NullableIntColumn.TYPE_CODE:
-			return new NullableIntColumn();
-		case NullableLongColumn.TYPE_CODE:
-			return new NullableLongColumn();
-		case NullableStringColumn.TYPE_CODE:
-			return new NullableStringColumn();
-		case NullableFloatColumn.TYPE_CODE:
-			return new NullableFloatColumn();
-		case NullableDoubleColumn.TYPE_CODE:
-			return new NullableDoubleColumn();
-		case NullableCharColumn.TYPE_CODE:
-			return new NullableCharColumn();
-		case NullableBooleanColumn.TYPE_CODE:
-			return new NullableBooleanColumn();
-		default:
-			return null;
-		}
-	}
+    /** The label of the column **/
+    protected String name;
 
+    /**
+     * Gets the value at the specified index
+     * 
+     * @param index The index of the value to get
+     * @return The value at the specified index as an Object
+     * @throws ArrayIndexOutOfBoundsException If the specified index is out of bounds
+     */
+    public abstract Object getValueAt(int index);
+
+    /**
+     * Sets the value at the specified index
+     * 
+     * @param index The index of the value to set
+     * @param value The value to set at the specified position
+     * @throws ArrayIndexOutOfBoundsException If the specified index is out of bounds
+     * @throws ClassCastException If the Object provided cannot be cast to the type 
+     * 		   this Column object can hold
+     */
+    public abstract void setValueAt(int index, Object value);
+
+    /**
+     * Returns the unique type code of this column
+     * 
+     * @return The type code of this <code>Column</code>
+     */
+    public abstract byte typeCode();
+
+    /**
+     * Indicates whether this column accepts null values. This method can be used
+     * instead of <br>
+     * <code>column instanceof NullableColumn</code>.<br>
+     * If this method returns true, then the above statement will be true as well
+     * 
+     * @return True if this <code>Column</code> can work with null values, false if
+     *         using null values with this <code>Column</code> will result in
+     *         exceptions during runtime
+     */
+    public abstract boolean isNullable();
+
+    /**
+     * Indicates whether this column contains numeric values
+     * 
+     * @return True if this column uses numeric values, false otherwise
+     */
+    public abstract boolean isNumeric();
+
+    /**
+     * Gets the label of this column.<br> 
+     * That is the name by which this column instance can
+     * be referenced when using DataFrame API calls
+     * 
+     * @return The name of this <code>Column</code>
+     */
+    public String getName(){
+        return this.name;
+    }
+
+    /**
+     * Returns the type of the data used by this Column.<br>
+     * The returned String value denotes the type of data in this Column
+     * 
+     * @return The type of data used by this <code>Column</code> as a String
+     */
+    public String getType(){
+        return memberClass().getSimpleName();
+    }
+
+    /**
+     * Creates and returns a copy of this Column
+     * 
+     * @return A copy of this Column
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public abstract Column clone();
+
+    /**
+     * Indicates whether this Column is equal to the specified Column.<br>
+     * Please note that the capacity of both columns may be taken into account
+     * when computing the equality
+     *
+     * @param obj The reference Column with which to compare
+     * @return True if this Column is equal to the specified Column
+     *          argument, false otherwise
+     * @see Object#equals(Object)
+     */
+    public abstract boolean equals(Object obj);
+
+    /**
+     * Returns a hash code value for this Column.<br>
+     * Please note that the capacity of both columns may be taken into account
+     * when computing the hash code
+     *
+     * @return A hash code value for this Column
+     * @see Object#hashCode()
+     */
+    public abstract int hashCode();
+
+    /**
+     * Inserts the specified value at the given index into the column. Shifts all 
+     * entries currently at that position and any subsequent entries down 
+     * (adds one to their indices)
+     * 
+     * @param index The index to insert the value at
+     * @param next The index of the next free position
+     * @param value The value to insert
+     */
+    protected abstract void insertValueAt(int index, int next, Object value);
+
+    /**
+     * Removes all entries from the first index given, to the second index.
+     * Shifts all entries currently next to the last position removed and any 
+     * subsequent entries up
+     * 
+     * @param from The index from which to start removing (inclusive)
+     * @param to The index to which to remove to (exclusive)
+     * @param next The index of the next free position
+     */
+    protected abstract void remove(int from, int to, int next);
+
+    /**
+     * Returns the current capacity of this column, i.e. the length of its
+     * internal array
+     * 
+     * @return The capacity of this column
+     */
+    protected abstract int capacity();
+
+    /**
+     * Returns the class of the entries this Column can hold and operate with
+     * 
+     * @return The class type of the entries
+     */
+    protected abstract Class<?> memberClass();
+
+    /**
+     * Resizes the internal array holding the column entries according to its 
+     * resizing strategy
+     */
+    protected abstract void resize();
+
+    /**
+     * Resizes the internal array to match the given length
+     * 
+     * @param length The length to resize the column to
+     */
+    protected abstract void matchLength(int length);
+
+    /**
+     * Creates a new <code>Column</code> instance with the specified type code.<br>
+     * This method can be used to construct an empty column which has the same type
+     * as another column but is not a copy of that column's content.<br>
+     * <pre>
+     * Column col = Column.ofType(someOtherCol.typeCode());
+     * </pre>
+     * The above statement will construct a column which has the same type as 
+     * <i>someOtherCol</i> but is completely empty regardless of the content of 
+     * the other column
+     * 
+     * @param typeCode The unique type code of the <code>Column</code> to create 
+     * @return An empty <code>Column</code> of the specified type
+     */
+    public static Column ofType(final byte typeCode){
+        switch(typeCode){
+        case ByteColumn.TYPE_CODE:
+            return new ByteColumn();
+        case ShortColumn.TYPE_CODE:
+            return new ShortColumn();
+        case IntColumn.TYPE_CODE:
+            return new IntColumn();
+        case LongColumn.TYPE_CODE:
+            return new LongColumn();
+        case StringColumn.TYPE_CODE:
+            return new StringColumn();
+        case FloatColumn.TYPE_CODE:
+            return new FloatColumn();
+        case DoubleColumn.TYPE_CODE:
+            return new DoubleColumn();
+        case CharColumn.TYPE_CODE:
+            return new CharColumn();
+        case BooleanColumn.TYPE_CODE:
+            return new BooleanColumn();
+        case BinaryColumn.TYPE_CODE:
+            return new BinaryColumn();
+        case NullableByteColumn.TYPE_CODE:
+            return new NullableByteColumn();
+        case NullableShortColumn.TYPE_CODE:
+            return new NullableShortColumn();
+        case NullableIntColumn.TYPE_CODE:
+            return new NullableIntColumn();
+        case NullableLongColumn.TYPE_CODE:
+            return new NullableLongColumn();
+        case NullableStringColumn.TYPE_CODE:
+            return new NullableStringColumn();
+        case NullableFloatColumn.TYPE_CODE:
+            return new NullableFloatColumn();
+        case NullableDoubleColumn.TYPE_CODE:
+            return new NullableDoubleColumn();
+        case NullableCharColumn.TYPE_CODE:
+            return new NullableCharColumn();
+        case NullableBooleanColumn.TYPE_CODE:
+            return new NullableBooleanColumn();
+        case NullableBinaryColumn.TYPE_CODE:
+            return new NullableBinaryColumn();
+        default:
+            return null;
+        }
+    }
 }

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2019 Raven Computing
+ * Copyright (C) 2020 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,19 +30,19 @@ package com.raven.common.util;
  */
 public class ArgumentParseException extends Exception {
 
-	private static final long serialVersionUID = 1L;
-	
-	private String cause;
-	private String hint;
+    private static final long serialVersionUID = 1L;
+
+    private String cause;
+    private String hint;
 
     /**
      * Constructs a new <code>ArgumentParseException</code> with null 
      * as its detail message. The cause is not initialized, and may
      * subsequently be initialized by a call to {@link #initCause}
      */
-	protected ArgumentParseException(){
-		super();
-	}
+    protected ArgumentParseException(){
+        super();
+    }
 
     /**
      * Constructs a new <code>ArgumentParseException</code> with the 
@@ -52,9 +52,9 @@ public class ArgumentParseException extends Exception {
      * @param message The detail message. The detail message is saved for
      * 				  later retrieval by the {@link #getMessage()} method
      */
-	protected ArgumentParseException(String message){
-		super(message);
-	}
+    protected ArgumentParseException(String message){
+        super(message);
+    }
 
     /**
      * Constructs a new <code>ArgumentParseException</code> with the 
@@ -66,9 +66,9 @@ public class ArgumentParseException extends Exception {
      *         		{@link #getCause()} method). A null value is permitted,
      *              and indicates that the cause is nonexistent or unknown)
      */
-	protected ArgumentParseException(Throwable cause){
-		super(cause);
-	}
+    protected ArgumentParseException(Throwable cause){
+        super(cause);
+    }
 
     /**
      * Constructs a new <code>ArgumentParseException</code> with the
@@ -82,9 +82,9 @@ public class ArgumentParseException extends Exception {
      *         		{@link #getCause()} method). A null value is permitted, 
      *         		and indicates that the cause is nonexistent or unknown
      */
-	protected ArgumentParseException(String message, Throwable cause){
-		super(message, cause);
-	}
+    protected ArgumentParseException(String message, Throwable cause){
+        super(message, cause);
+    }
 
     /**
      * Constructs a new <code>ArgumentParseException</code> with the 
@@ -99,51 +99,51 @@ public class ArgumentParseException extends Exception {
      * @param writableStackTrace Whether or not the stack trace should
      *                           be writable
      */
-	protected ArgumentParseException(String message, Throwable cause,
-			boolean enableSuppression, boolean writableStackTrace){
-		
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
-	
-	/**
-	 * Returns a detailed hint about all the arguments the underlying 
-	 * <code>ArgumentParser</code> instance can handle.<br> The returned
-	 * string is formatted and suitable to be displayed to a user
-	 * 
-	 * @return A hint showing all arguments the underlying argument parser was
-	 * 		   set up to handle
-	 */
-	public String hint(){
-		return this.hint;
-	}
-	
-	/**
-	 * Returns the argument that caused this <code>ArgumentParseException</code>
-	 * to be thrown
-	 * 
-	 * @return The erroneous argument that caused this exception, as a string
-	 */
-	public String cause(){
-		return this.cause;
-	}
-	
-	/**
-	 * Sets a detailed hint about all the arguments the underlying 
-	 * <code>ArgumentParser</code> instance can handle
-	 * 
-	 * @param hint The hint to show to the user
-	 */
-	protected void setHint(final String hint){
-		this.hint = hint;
-	}
-	
-	/**
-	 * Sets the argument that caused this <code>ArgumentParseException</code>
-	 * to be thrown
-	 * 
-	 * @param arg The erroneous argument that caused this exception, as a string
-	 */
-	protected void setCause(final String arg){
-		this.cause = arg;
-	}
+    protected ArgumentParseException(String message, Throwable cause,
+            boolean enableSuppression, boolean writableStackTrace){
+
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    /**
+     * Returns a detailed hint about all the arguments the underlying 
+     * <code>ArgumentParser</code> instance can handle.<br> The returned
+     * string is formatted and suitable to be displayed to a user
+     * 
+     * @return A hint showing all arguments the underlying argument parser was
+     * 		   set up to handle
+     */
+    public String hint(){
+        return this.hint;
+    }
+
+    /**
+     * Returns the argument that caused this <code>ArgumentParseException</code>
+     * to be thrown
+     * 
+     * @return The erroneous argument that caused this exception, as a string
+     */
+    public String cause(){
+        return this.cause;
+    }
+
+    /**
+     * Sets a detailed hint about all the arguments the underlying 
+     * <code>ArgumentParser</code> instance can handle
+     * 
+     * @param hint The hint to show to the user
+     */
+    protected void setHint(final String hint){
+        this.hint = hint;
+    }
+
+    /**
+     * Sets the argument that caused this <code>ArgumentParseException</code>
+     * to be thrown
+     * 
+     * @param arg The erroneous argument that caused this exception, as a string
+     */
+    protected void setCause(final String arg){
+        this.cause = arg;
+    }
 }
