@@ -79,5 +79,4 @@ public class DataFrameSerializerInstance implements Serializer<DataFrame> {
     public DataFrame deserialize(byte[] bytes) throws SerializationException{
         return DataFrameSerializer.deserialize(bytes);
     }
-
 }

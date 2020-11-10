@@ -43,7 +43,7 @@ package com.raven.common.util;
  * @since 3.0.0
  */
 public interface Action {
-    
+
     /**
      * Returns the argument of this action as a type denoted by the the specified
      * Class object
@@ -55,7 +55,7 @@ public interface Action {
      *                            cast to the specified type
      */
     public <T> T getArgument(Class<T> classOfArg) throws ClassCastException;
-    
+
     /**
      * Indicates whether this action has been cancelled. Once an action
      * is cancelled, it cannot be resumed. A completed action should never
@@ -65,7 +65,7 @@ public interface Action {
      *         has not been cancelled
      */
     public boolean isCancelled();
-    
+
     /**
      * Cancels this action. Concrete actions may interrupt an already
      * running execution or concede completion. If this action is recurrent,
@@ -73,7 +73,7 @@ public interface Action {
      * this method returns
      */
     public void cancel();
-    
+
     /**
      * Indicates whether this action is recurrent. A recurrent action is
      * repetitive in that it will be run mutliple times, possibly with an
@@ -84,7 +84,7 @@ public interface Action {
      * @see #getCount()
      */
     public boolean isRecurrent();
-    
+
     /**
      * Returns the number of remaining iterations this action is run for.
      * For actions which are only run once this method returns 1 if the
@@ -96,7 +96,7 @@ public interface Action {
      * @see #isRecurrent()
      */
     public long getCount();
-    
+
     /**
      * Indicates whether this action is currently running
      * 
@@ -104,7 +104,7 @@ public interface Action {
      *         False if this action is not running
      */
     public boolean isRunning();
-    
+
     /**
      * Indicates whether this action has completed all its executions
      * 
@@ -113,7 +113,7 @@ public interface Action {
      *         and has pending executions at the time this method is called
      */
     public boolean isCompleted();
-    
+
     /**
      * Indicates whether this action has terminated all its executions. This method
      * should return true if the action is either cancelled or has
@@ -125,5 +125,5 @@ public interface Action {
      *         pending executions at the time this method is called
      */
     public boolean isTerminated();
-    
+
 }

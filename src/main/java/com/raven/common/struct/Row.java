@@ -33,9 +33,9 @@ package com.raven.common.struct;
  * 
  * <p>Generally, a <code>RowItem</code> annotation attached to a member field 
  * specifies to which column it belongs to. For this feature all columns are 
- * only referenced by their name. For that reason columns must be labeled before
- * any method exposed by this feature is called. Failing to do so will result in an 
- * exception being raised at runtime.
+ * only referenced by their name. For that reason, columns must be labeled before
+ * any method exposed by this feature is called. Failing to do so will result
+ * in an exception being raised at runtime.
  * 
  * <p>Classes implementing this interface do not necessarily have to be plain 
  * model classes. They can have an arbitrary positive number of member fields, 

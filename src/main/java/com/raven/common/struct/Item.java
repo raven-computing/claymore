@@ -33,21 +33,21 @@ package com.raven.common.struct;
  * @param <V> The type of values to be used by the Item
  */
 public interface Item<V> extends Comparable<Item<V>> {
-    
+
     /**
      * Gets the key of this item
      * 
      * @return The key of this item
      */
     public String getKey();
-    
+
     /**
      * Sets the key of this item to the specified String
      * 
      * @param key The new key of this item
      */
     public void setKey(String key);
-    
+
     /**
      * Indicates whether this item has a key
      * 
@@ -55,21 +55,21 @@ public interface Item<V> extends Comparable<Item<V>> {
      *         False if this item's key is null or the empty String
      */
     public boolean hasKey();
-    
+
     /**
      * Gets the value of this item
      * 
      * @return The value of this item
      */
     public V getValue();
-    
+
     /**
      * Sets the value of this item to the specified value
      * 
      * @param value The new value of this item
      */
     public void setValue(V value);
-    
+
     /**
      * Indicates whether this item has a value
      * 
@@ -77,7 +77,7 @@ public interface Item<V> extends Comparable<Item<V>> {
      *         False if this item's value is null
      */
     public boolean hasValue();
-    
+
     /**
      * Indicates whether this item is empty. An item is empty
      * if it neither has a key nor a value
@@ -85,5 +85,5 @@ public interface Item<V> extends Comparable<Item<V>> {
      * @return True if this item is empty, false if it is not empty
      */
     public boolean isEmpty();
-    
+
 }

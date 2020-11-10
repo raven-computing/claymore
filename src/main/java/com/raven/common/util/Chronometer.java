@@ -277,39 +277,39 @@ public class Chronometer {
         }else{
             elapsed = t1-t0;
         }
-        while(elapsed>=86400000L){
+        while(elapsed >= 86400000L){
             days += 1;
-            elapsed-=86400000L;
+            elapsed -= 86400000L;
         }
         if(days>0){
             sb.append(days);
             sb.append(" days ");
         }
-        while(elapsed>=3600000L){
-            hours+=1;
-            elapsed-=3600000L;
+        while(elapsed >= 3600000L){
+            hours += 1;
+            elapsed -= 3600000L;
         }
-        if(hours>0){
+        if(hours > 0){
             sb.append(hours);
             sb.append("h ");
         }
-        while(elapsed>=60000L){
-            minutes+=1;
-            elapsed-=60000L;
+        while(elapsed >= 60000L){
+            minutes += 1;
+            elapsed -= 60000L;
         }
-        if(minutes>0){
+        if(minutes > 0){
             sb.append(minutes);
             sb.append("min ");
         }
-        while(elapsed>=1000L){
-            seconds+=1;
-            elapsed-=1000L;
+        while(elapsed >= 1000L){
+            seconds += 1;
+            elapsed -= 1000L;
         }
-        if(seconds>0){
+        if(seconds > 0){
             sb.append(seconds);
             sb.append("s ");
         }
-        if(elapsed>0){
+        if(elapsed > 0){
             sb.append(elapsed);
             sb.append("ms");
         }
@@ -428,5 +428,4 @@ public class Chronometer {
             return String.valueOf(System.currentTimeMillis());
         }
     }
-    
 }

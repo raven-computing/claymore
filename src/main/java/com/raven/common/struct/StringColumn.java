@@ -16,18 +16,21 @@
 
 package com.raven.common.struct;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
- * Column holding String values.<br>
+ * A Column holding String values.<br>
  * This implementation <b>DOES NOT</b> support null values or empty strings.
  * 
  * @see NullableStringColumn
  *
  */
-public class StringColumn extends Column {
+public final class StringColumn extends Column {
 
     /**
      * The unique type code of all <code>StringColumns</code>
@@ -35,10 +38,10 @@ public class StringColumn extends Column {
     public static final byte TYPE_CODE = (byte)5;
 
     /**
-     * The placeholder used when trying to add or insert null or 
-     * empty strings into any StringColumn
+     * The default placeholder value used when trying to add or insert
+     * null or empty strings into any non-nullable StringColumn
      */
-    public static final String PLACEHOLDER_EMPTY = "n/a";
+    public static final String DEFAULT_VALUE = "n/a";
 
     private String[] entries;
 
@@ -46,7 +49,20 @@ public class StringColumn extends Column {
      * Constructs an empty <code>StringColumn</code>.
      */
     public StringColumn(){
-        this.entries = new String[0];
+        this(0);
+    }
+
+    /**
+     * Constructs a <code>StringColumn</code> with the specified length.<br>
+     * All column entries are set to default string values
+     * 
+     * @param length The initial length of the column to construct
+     */
+    public StringColumn(final int length){
+        this.entries = new String[length];
+        for(int i=0; i<length; ++i){
+            this.entries[i] = DEFAULT_VALUE;
+        }
     }
 
     /**
@@ -56,6 +72,22 @@ public class StringColumn extends Column {
      */
     public StringColumn(final String name){
         this();
+        if((name == null) || (name.isEmpty())){
+            throw new IllegalArgumentException("Column name must not be null or empty");
+        }
+        this.name = name;
+    }
+
+    /**
+     * Constructs a <code>StringColumn</code> with the specified label
+     * and the specified length.<br>
+     * All column entries are set to default string values
+     * 
+     * @param name The name of the column to construct. Must not be null or empty
+     * @param length The initial length of the column to construct
+     */
+    public StringColumn(final String name, final int length){
+        this(length);
         if((name == null) || (name.isEmpty())){
             throw new IllegalArgumentException("Column name must not be null or empty");
         }
@@ -74,7 +106,7 @@ public class StringColumn extends Column {
         }
         for(int i=0; i<column.length; ++i){
             if((column[i] == null) || (column[i].isEmpty())){
-                column[i] = PLACEHOLDER_EMPTY;
+                column[i] = DEFAULT_VALUE;
             }
         }
         this.entries = column;
@@ -94,7 +126,7 @@ public class StringColumn extends Column {
         }
         for(int i=0; i<column.length; ++i){
             if((column[i] == null) || (column[i].isEmpty())){
-                column[i] = PLACEHOLDER_EMPTY;
+                column[i] = DEFAULT_VALUE;
             }
         }
         this.entries = column;
@@ -142,7 +174,7 @@ public class StringColumn extends Column {
      */
     public void set(final int index, final String value){
         entries[index] = (((value == null) || (value.isEmpty())) 
-                ? PLACEHOLDER_EMPTY 
+                ? DEFAULT_VALUE 
                         : value);
     }
 
@@ -161,7 +193,9 @@ public class StringColumn extends Column {
         for(int i=0; i<entries.length; ++i){
             clone[i] = entries[i];
         }
-        return new StringColumn(clone);
+        return ((name != null) && !name.isEmpty())
+                ? new StringColumn(name, clone)
+                : new StringColumn(clone);
     }
 
     @Override
@@ -192,15 +226,15 @@ public class StringColumn extends Column {
     }
 
     @Override
-    public Object getValueAt(int index){
+    public Object getValue(int index){
         return entries[index];
     }
 
     @Override
-    public void setValueAt(int index, Object value){
+    public void setValue(int index, Object value){
         entries[index] = (((value == null) || ((String)value).isEmpty()) 
-                ? PLACEHOLDER_EMPTY 
-                        : (String)value);
+                ? DEFAULT_VALUE 
+                : (String)value);
     }
 
     @Override
@@ -209,8 +243,280 @@ public class StringColumn extends Column {
     }
 
     @Override
+    public String typeName(){
+        return "string";
+    }
+
+    @Override
+    public int capacity(){
+        return entries.length;
+    }
+
+    @Override
     public boolean isNumeric(){
         return false;
+    }
+
+    @Override
+    public Object getDefaultValue(){
+        return DEFAULT_VALUE;
+    }
+
+    @Override
+    public int memoryUsage(){
+        int size = 0;
+        for(int i=0; i<entries.length; ++i){
+            if(entries[i] != null){
+                final byte[] raw = entries[i].getBytes(StandardCharsets.UTF_8); 
+                size += (raw.length > 0) ? raw.length + 1 : 1;
+            }
+        }
+        return size;
+    }
+
+    @Override
+    public Column convertTo(byte typeCode){
+        Column converted = null;
+        switch(typeCode){
+        case ByteColumn.TYPE_CODE:
+            final byte[] bytes = new byte[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    bytes[i] = Byte.valueOf(entries[i]);
+                }else{
+                    bytes[i] = 0;
+                }
+            }
+            converted = new ByteColumn(bytes);
+            break;
+        case ShortColumn.TYPE_CODE:
+            final short[] shorts = new short[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    shorts[i] = Short.valueOf(entries[i]);
+                }else{
+                    shorts[i] = 0;
+                }
+            }
+            converted = new ShortColumn(shorts);
+            break;
+        case IntColumn.TYPE_CODE:
+            final int[] ints = new int[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    ints[i] = Integer.valueOf(entries[i]);
+                }else{
+                    ints[i] = 0;
+                }
+            }
+            converted = new IntColumn(ints);
+            break;
+        case LongColumn.TYPE_CODE:
+            final long[] longs = new long[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    longs[i] = Long.valueOf(entries[i]);
+                }else{
+                    longs[i] = 0l;
+                }
+            }
+            converted = new LongColumn(longs);
+            break;
+        case StringColumn.TYPE_CODE:
+            converted = this.clone();
+            break;
+        case FloatColumn.TYPE_CODE:
+            final float[] floats = new float[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    floats[i] = Float.valueOf(entries[i]);
+                }else{
+                    floats[i] = 0.0f;
+                }
+            }
+            converted = new FloatColumn(floats);
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final double[] doubles = new double[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    doubles[i] = Double.valueOf(entries[i]);
+                }else{
+                    doubles[i] = 0.0;
+                }
+            }
+            converted = new DoubleColumn(doubles);
+            break;
+        case CharColumn.TYPE_CODE:
+            final char[] chars = new char[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    chars[i] = entries[i].charAt(0);
+                }else{
+                    chars[i] = CharColumn.DEFAULT_VALUE;
+                }
+            }
+            converted = new CharColumn(chars);
+            break;
+        case BooleanColumn.TYPE_CODE:
+            final Set<String> valuesTrue = new HashSet<>(
+                    Arrays.asList("true","t","1","yes","y","on"));
+
+            final Set<String> valuesFalse = new HashSet<>(
+                    Arrays.asList("false","f","0","no","n","off"));
+
+            final boolean[] bools = new boolean[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    final String s = entries[i].toLowerCase();
+                    final boolean isTrue = valuesTrue.contains(s);
+                    final boolean isFalse = valuesFalse.contains(s);
+                    if(!isTrue && !isFalse){
+                        throw new DataFrameException("Invalid boolean string: "
+                                + entries[i]);
+                    }
+                    bools[i] = isTrue;
+                }else{
+                    bools[i] = false;
+                }
+            }
+            converted = new BooleanColumn(bools);
+            break;
+        case BinaryColumn.TYPE_CODE:
+            final byte[][] bins = new byte[entries.length][];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    bins[i] = entries[i].getBytes(StandardCharsets.UTF_8);
+                }else{
+                    bins[i] = new byte[]{0};
+                }
+            }
+            converted = new BinaryColumn(bins);
+            break;
+        case NullableByteColumn.TYPE_CODE:
+            final Byte[] bytesn = new Byte[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    bytesn[i] = Byte.valueOf(entries[i]);
+                }else{
+                    bytesn[i] = null;
+                }
+            }
+            converted = new NullableByteColumn(bytesn);
+            break;
+        case NullableShortColumn.TYPE_CODE:
+            final Short[] shortsn = new Short[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    shortsn[i] = Short.valueOf(entries[i]);
+                }else{
+                    shortsn[i] = null;
+                }
+            }
+            converted = new NullableShortColumn(shortsn);
+            break;
+        case NullableIntColumn.TYPE_CODE:
+            final Integer[] intsn = new Integer[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    intsn[i] = Integer.valueOf(entries[i]);
+                }else{
+                    intsn[i] = null;
+                }
+            }
+            converted = new NullableIntColumn(intsn);
+            break;
+        case NullableLongColumn.TYPE_CODE:
+            final Long[] longsn = new Long[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    longsn[i] = Long.valueOf(entries[i]);
+                }else{
+                    longsn[i] = null;
+                }
+            }
+            converted = new NullableLongColumn(longsn);
+            break;
+        case NullableStringColumn.TYPE_CODE:
+            final String[] stringsn = new String[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                stringsn[i] = entries[i];
+            }
+            converted = new NullableStringColumn(stringsn);
+            break;
+        case NullableFloatColumn.TYPE_CODE:
+            final Float[] floatsn = new Float[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    floatsn[i] = Float.valueOf(entries[i]);
+                }else{
+                    floatsn[i] = null;
+                }
+            }
+            converted = new NullableFloatColumn(floatsn);
+            break;
+        case NullableDoubleColumn.TYPE_CODE:
+            final Double[] doublesn = new Double[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    doublesn[i] = Double.valueOf(entries[i]);
+                }else{
+                    doublesn[i] = null;
+                }
+            }
+            converted = new NullableDoubleColumn(doublesn);
+            break;
+        case NullableCharColumn.TYPE_CODE:
+            final Character[] charsn = new Character[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    charsn[i] = entries[i].charAt(0);
+                }else{
+                    charsn[i] = null;
+                }
+            }
+            converted = new NullableCharColumn(charsn);
+            break;
+        case NullableBooleanColumn.TYPE_CODE:
+            final Set<String> valuesnTrue = new HashSet<>(
+                    Arrays.asList("true","t","1","yes","y","on"));
+
+            final Set<String> valuesnFalse = new HashSet<>(
+                    Arrays.asList("false","f","0","no","n","off"));
+
+            final Boolean[] boolsn = new Boolean[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    final String s = entries[i].toLowerCase();
+                    final boolean isTrue = valuesnTrue.contains(s);
+                    final boolean isFalse = valuesnFalse.contains(s);
+                    if(!isTrue && !isFalse){
+                        throw new DataFrameException("Invalid boolean string: "
+                                + entries[i]);
+                    }
+                    boolsn[i] = isTrue;
+                }else{
+                    boolsn[i] = null;
+                }
+            }
+            converted = new NullableBooleanColumn(boolsn);
+            break;
+        case NullableBinaryColumn.TYPE_CODE:
+            final byte[][] binsn = new byte[entries.length][];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    binsn[i] = entries[i].getBytes(StandardCharsets.UTF_8);
+                }else{
+                    binsn[i] = null;
+                }
+            }
+            converted = new NullableBinaryColumn(binsn);
+            break;
+        default:
+            throw new DataFrameException("Unknown column type code: " + typeCode);
+        }
+        converted.name = this.name;
+        return converted;
     }
 
     @Override
@@ -219,17 +525,12 @@ public class StringColumn extends Column {
     }
 
     @Override
-    protected int capacity(){
-        return entries.length;
-    }
-
-    @Override
     protected void insertValueAt(int index, int next, Object value){
         for(int i=next; i>index; --i){
             entries[i] = entries[i-1];
         }
         entries[index] = (((value == null) || ((String)value).isEmpty()) 
-                ? PLACEHOLDER_EMPTY 
+                ? DEFAULT_VALUE 
                         : (String)value);
     }
 
@@ -282,7 +583,7 @@ public class StringColumn extends Column {
         while(iter.hasNext()){
             final String s = iter.next();
             tmp[i++] = (((s == null) || (s.isEmpty())) 
-                    ? PLACEHOLDER_EMPTY 
+                    ? DEFAULT_VALUE 
                             : s);
         }
         this.entries = tmp;

@@ -16,6 +16,8 @@
 
 package com.raven.common.io;
 
+import static com.raven.common.io.ConfigurationFileHandler.isComment;
+
 import java.io.File;
 import java.time.Instant;
 import java.util.HashMap;
@@ -26,8 +28,6 @@ import java.util.Map;
 
 import com.raven.common.struct.Item;
 import com.raven.common.struct.WritableItem;
-
-import static com.raven.common.io.ConfigurationFileHandler.isComment;
 
 /**
  * Represents a <code>.config</code> file from the filesystem.<br>

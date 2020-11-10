@@ -69,12 +69,12 @@ import com.raven.common.io.Serializer;
  * @param <E> The type of elements to be used by the Bloom filter
  */
 public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
-    
+
     private final BitVector filter;
     private final int capacity;
     private final int slices;
     private final int sliceSize;
-    
+
     /**
      * Constructs a new <code>StaticBloomFilter</code> with a capacity
      * of 10000 elements and a maximum allowed false positive
@@ -90,7 +90,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
     public StaticBloomFilter(final Serializer<E> serializer){
         this(serializer, 10000, 0.01);
     }
-    
+
     /**
      * Constructs a new <code>StaticBloomFilter</code> with the specified
      * capacity and a maximum allowed false positive probability of 1%.<br>
@@ -109,7 +109,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
         
         this(serializer, capacity, 0.01);
     }
-    
+
     /**
      * Constructs a new <code>StaticBloomFilter</code> with the specified
      * capacity and maximum allowed false positive probability.<br>
@@ -137,7 +137,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
         final int vectorSize = (slices * sliceSize);
         this.filter = BitVector.createInitialized(vectorSize, false);
     }
-    
+
     /**
      * Adds the specified element to this StaticBloomFilter. Adding an element
      * which is already in the filter will have no effect
@@ -152,7 +152,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
     public void add(E element){
         put(hash(element));
     }
-    
+
     /**
      * Indicates whether this StaticBloomFilter possibly contains
      * the specified element. If this method returns true, then the specified
@@ -179,7 +179,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
     public boolean contains(E element){
         return contains(hash(element));
     }
-    
+
     /**
      * Indicates whether this StaticBloomFilter is empty. An empty filter
      * contains no elements
@@ -191,7 +191,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
     public boolean isEmpty(){
         return (filter.bitsSet() == 0);
     }
-    
+
     /**
      * Returns an estimation of the size of this StaticBloomFilter.
      * The number of elements is approximated by putting the configured size of
@@ -206,7 +206,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
     public int approximateSize(){
         return (int) (-sliceSize * Math.log(1 - fillRatio()));
     }
-    
+
     /**
      * Returns the size in bytes this StaticBloomFilter has allocated in memory
      * in order to store all elements of its current capacity
@@ -221,7 +221,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
         // + 12 bytes for internally used vars in this instance
         return this.filter.asArray().length + 20;
     }
-    
+
     /**
      * Removes all of the elements from this StaticBloomFilter. The filter
      * will be empty after this method returns. The capacity of this filter
@@ -231,7 +231,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
     public void clear(){
         this.filter.clear();
     }
-    
+
     /**
      * Returns a string representation of this StaticBloomFilter.<br>
      * This method can be used to gather informative
@@ -262,7 +262,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
         sb.append(" KB)");
         return sb.toString();
     }
-    
+
     /**
      * Gets the capacity of this static Bloom filter. The capacity
      * for a static bloom filter cannot change and denotes the maximum
@@ -273,7 +273,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
     public int getCapacity(){
         return this.capacity;
     }
-    
+
     /**
      * Adds the specified hash to the filter
      * 
@@ -289,7 +289,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
             offset += sliceSize;
         }
     }
-    
+
     /**
      * Indicates whether the specified hash might have
      * been added to this Stage
@@ -311,7 +311,7 @@ public class StaticBloomFilter<E> extends AbstractBloomFilter<E> {
         }
         return true;
     }
-    
+
     /**
      * Returns the fill ratio of this filter
      * 

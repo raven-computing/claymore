@@ -47,9 +47,9 @@ import java.security.NoSuchAlgorithmException;
  *
  */
 public final class Hash {
-    
+
     private Hash(){ }
-    
+
     /**
      * Returns the MD5 hash of the specified <b>UTF-8</b> encoded string
      * 
@@ -59,7 +59,7 @@ public final class Hash {
     public static byte[] md5(final String input){
         return md5(input, StandardCharsets.UTF_8);
     }
-    
+
     /**
      * Returns the MD5 hash of the specified string encoded with
      * the specified character set
@@ -72,7 +72,7 @@ public final class Hash {
     public static byte[] md5(final String input, final Charset charset){
         return md5(input.getBytes(charset));
     }
-    
+
     /**
      * Returns the MD5 hash of the specified bytes
      * 
@@ -82,7 +82,7 @@ public final class Hash {
     public static byte[] md5(final byte[] input){
         return hash(input, "MD5");
     }
-    
+
     /**
      * Returns the SHA-1 hash of the specified <b>UTF-8</b> encoded string
      * 
@@ -92,7 +92,7 @@ public final class Hash {
     public static byte[] sha1(final String input){
         return sha1(input, StandardCharsets.UTF_8);
     }
-    
+
     /**
      * Returns the SHA-1 hash of the specified string encoded with
      * the specified character set
@@ -105,7 +105,7 @@ public final class Hash {
     public static byte[] sha1(final String input, final Charset charset){
         return sha1(input.getBytes(charset));
     }
-    
+
     /**
      * Returns the SHA-1 hash of the specified bytes
      * 
@@ -115,7 +115,7 @@ public final class Hash {
     public static byte[] sha1(final byte[] input){
         return hash(input, "SHA-1");
     }
-    
+
     /**
      * Returns the SHA-224 hash of the specified <b>UTF-8</b> encoded string
      * 
@@ -125,7 +125,7 @@ public final class Hash {
     public static byte[] sha224(final String input){
         return sha224(input, StandardCharsets.UTF_8);
     }
-    
+
     /**
      * Returns the SHA-224 hash of the specified string encoded with
      * the specified character set
@@ -138,7 +138,7 @@ public final class Hash {
     public static byte[] sha224(final String input, final Charset charset){
         return sha224(input.getBytes(charset));
     }
-    
+
     /**
      * Returns the SHA-224 hash of the specified bytes
      * 
@@ -148,7 +148,7 @@ public final class Hash {
     public static byte[] sha224(final byte[] input){
         return hash(input, "SHA-224");
     }
-    
+
     /**
      * Returns the SHA-256 hash of the specified <b>UTF-8</b> encoded string
      * 
@@ -158,7 +158,7 @@ public final class Hash {
     public static byte[] sha256(final String input){
         return sha256(input, StandardCharsets.UTF_8);
     }
-    
+
     /**
      * Returns the SHA-256 hash of the specified string encoded with
      * the specified character set
@@ -171,7 +171,7 @@ public final class Hash {
     public static byte[] sha256(final String input, final Charset charset){
         return sha256(input.getBytes(charset));
     }
-    
+
     /**
      * Returns the SHA-256 hash of the specified bytes
      * 
@@ -181,7 +181,7 @@ public final class Hash {
     public static byte[] sha256(final byte[] input){
         return hash(input, "SHA-256");
     }
-    
+
     /**
      * Returns the SHA-384 hash of the specified <b>UTF-8</b> encoded string
      * 
@@ -191,7 +191,7 @@ public final class Hash {
     public static byte[] sha384(final String input){
         return sha384(input, StandardCharsets.UTF_8);
     }
-    
+
     /**
      * Returns the SHA-384 hash of the specified string encoded with
      * the specified character set
@@ -204,7 +204,7 @@ public final class Hash {
     public static byte[] sha384(final String input, final Charset charset){
         return sha384(input.getBytes(charset));
     }
-    
+
     /**
      * Returns the SHA-384 hash of the specified bytes
      * 
@@ -214,7 +214,7 @@ public final class Hash {
     public static byte[] sha384(final byte[] input){
         return hash(input, "SHA-384");
     }
-    
+
     /**
      * Returns the SHA-512 hash of the specified <b>UTF-8</b> encoded string
      * 
@@ -224,7 +224,7 @@ public final class Hash {
     public static byte[] sha512(final String input){
         return sha512(input, StandardCharsets.UTF_8);
     }
-    
+
     /**
      * Returns the SHA-512 hash of the specified string encoded with
      * the specified character set
@@ -237,7 +237,7 @@ public final class Hash {
     public static byte[] sha512(final String input, final Charset charset){
         return sha512(input.getBytes(charset));
     }
-    
+
     /**
      * Returns the SHA-512 hash of the specified bytes
      * 
@@ -247,7 +247,7 @@ public final class Hash {
     public static byte[] sha512(final byte[] input){
         return hash(input, "SHA-512");
     }
-    
+
     /**
      * Returns a hash of the specified bytes using the specified hash function
      * 
@@ -260,7 +260,7 @@ public final class Hash {
     public static byte[] of(final HashFunction hashFunction, final byte[] input){
         return hashFunction.apply(input);
     }
-    
+
     /**
      * Returns a hash for the specified bytes using the hash function
      * denoted by the specified name
@@ -276,7 +276,7 @@ public final class Hash {
      */
     private static byte[] hash(final byte[] input, final String algorithm)
             throws IllegalStateException{
-        
+
         try{
             final MessageDigest md = MessageDigest.getInstance(algorithm);
             md.update(input);

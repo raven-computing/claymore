@@ -121,19 +121,19 @@ import java.util.Arrays;
  *
  */
 public final class BitVector implements Cloneable, Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     /**
      * The internal array holding the state of all bits
      */
     private byte[] bits;
-    
+
     /**
      * Index pointer indicating the next free bit position
      */
     private int next;
-    
+
     /**
      * Internal cache of the counted 1s within the BitVector. This is initially
      * set to -1 which indicates that the bits have not been counted yet. After
@@ -145,14 +145,14 @@ public final class BitVector implements Cloneable, Serializable {
      * 
      */
     private int ones = -1;
-    
+
     /**
      * Constructs an empty <code>BitVector</code>
      */
     public BitVector(){
         this(0);
     }
-    
+
     /**
      * Constructs an empty <code>BitVector</code> with the specified initial
      * capacity in bits
@@ -166,7 +166,7 @@ public final class BitVector implements Cloneable, Serializable {
                 ? ((initialCapacity >> 3) + 1)
                 : (initialCapacity >> 3)];
     }
-    
+
     /**
      * Constructs a <code>BitVector</code> which has the same bits
      * set as the BitVector provided to this constructor. This essentially
@@ -184,7 +184,7 @@ public final class BitVector implements Cloneable, Serializable {
         this.next = vec.next;
         this.ones = vec.ones;
     }
-    
+
     /**
      * Private constructor to create a BitVector from the specified byte array
      * 
@@ -194,7 +194,7 @@ public final class BitVector implements Cloneable, Serializable {
       this.bits = bits;
       this.next = bits.length * 8;
     }
-    
+
     /**
      * Gets the value of the bit at the specified index.<br>
      * The index must not be greater than or equal to this BitVector's size
@@ -233,7 +233,7 @@ public final class BitVector implements Cloneable, Serializable {
         vec.next = length;
         return vec;
     }
-    
+
     /**
      * Sets the bit at the specified index to the specified value.<br>
      * If the index is greater than the current size of this BitVector then
@@ -262,7 +262,7 @@ public final class BitVector implements Cloneable, Serializable {
             ones += (bit ? 1 : -1);
         }
     }
-    
+
     /**
      * Sets all bits from the specified start index (inclusive) to the specified
      * end index (exclusive) to the specified value.<br>
@@ -294,7 +294,7 @@ public final class BitVector implements Cloneable, Serializable {
             }
         }
     }
-    
+
     /**
      * Sets all bits to the values of the specified BitVector beginning at
      * the specified index of this BitVector.
@@ -319,7 +319,7 @@ public final class BitVector implements Cloneable, Serializable {
             set(ptr++, ((content[i >> 3] & (0x80 >>> (i%8))) != 0));
         }
     }
-    
+
     /**
      * Adds the specified bit to end of this BitVector
      * 
@@ -336,7 +336,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         ++next;
     }
-    
+
     /**
      * Adds all bits of the specified BitVector to end of this BitVector
      * 
@@ -398,7 +398,7 @@ public final class BitVector implements Cloneable, Serializable {
             ++ones;
         }
     }
-    
+
     /**
      * Inserts all bits of the specified BitVector argument into this BitVector at
      * the specified index. Shifts all bits currently at that position and any
@@ -421,7 +421,7 @@ public final class BitVector implements Cloneable, Serializable {
             this.insertAt(index, vec.get(i));
         }
     }
-    
+
     /**
      * Removes the bit at the specified index.
      * <br>This operation will essentially shift all bits on the right
@@ -461,7 +461,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         --next;
     }
-    
+
     /**
      * Removes all bits from the specified index (inclusive) to the
      * specified index (exclusive).
@@ -506,7 +506,7 @@ public final class BitVector implements Cloneable, Serializable {
             --next;
         }
     }
-    
+
     /**
      * Sets all bits of this BitVector to 0 (zero).<br>
      * This operation does neither affect the size nor the capacity
@@ -522,7 +522,7 @@ public final class BitVector implements Cloneable, Serializable {
             ones = 0;
         }
     }
-    
+
     /**
      * Sets all bits of this BitVector to the specified value.
      * <br>This operation does neither affect the size nor the capacity
@@ -541,7 +541,7 @@ public final class BitVector implements Cloneable, Serializable {
             clear();
         }
     }
-    
+
     /**
      * Flips the bit at the specified index.<br>
      * If the bit at the given index is 1 then it will be set to 0 (zero) and if
@@ -562,7 +562,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         bits[block] ^= mask;
     }
-    
+
     /**
      * Flips all bits from the specified start index (inclusive) to the specified
      * end index (exclusive).
@@ -581,7 +581,7 @@ public final class BitVector implements Cloneable, Serializable {
             this.flip(i);
         }
     }
-    
+
     /**
      * Returns the index of the first bit that is set to 1 that occurs on or
      * after the specified index. If the bit on the specfied index and all
@@ -602,7 +602,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return -1;
     }
-    
+
     /**
      * Returns the index of the first bit that is set to 0 (zero) that occurs
      * on or after the specified index. If the bit on the specfied index and all
@@ -623,7 +623,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return -1;
     }
-    
+
     /**
      * Returns the index of the first bit that is set to 1 that occurs on or
      * prior to the specified index. If the bit on the specfied index and all
@@ -644,7 +644,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return -1;
     }
-    
+
     /**
      * Returns the index of the first bit that is set to 0 (zero) that occurs
      * on or prior to the specified index. If the bit on the specfied index and all
@@ -665,7 +665,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return -1;
     }
-    
+
     /**
      * Returns the number of bits in this BitVector. Please note that the size of
      * a BitVector is purely determined by the sum of 1s and 0s such that
@@ -677,7 +677,7 @@ public final class BitVector implements Cloneable, Serializable {
     public int size(){
         return this.next;
     }
-    
+
     /**
      * Returns the number of bits that this BitVector can hold before having
      * to perform a resizing operation. The return value of this method
@@ -690,7 +690,7 @@ public final class BitVector implements Cloneable, Serializable {
     public int capacity(){
         return (this.bits.length * 8);
     }
-    
+
     /**
      * Indicates whether this BitVector is empty, i.e. it has no bits.<br>
      * Please note that a BitVector with all bits set to 0 (zero) is not
@@ -703,7 +703,7 @@ public final class BitVector implements Cloneable, Serializable {
     public boolean isEmpty(){
         return (next == 0);
     }
-    
+
     /**
      * Returns the number of set bits in this BitVector, i.e. how many bits
      * are set to <b>1</b>
@@ -753,7 +753,7 @@ public final class BitVector implements Cloneable, Serializable {
         ensureCounted();
         return (next - ones);
     }
-    
+
     /**
      * Shifts the entire bit pattern of this BitVector to the left by the
      * specified amount.
@@ -813,7 +813,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return this;
     }
-    
+
     /**
      * Shifts the entire bit pattern of this BitVector to the right by the
      * specified amount.
@@ -878,7 +878,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return this;
     }
-    
+
     /**
      * Rotates the entire bit pattern of this BitVector to the left by the
      * specified amount. Bits shifted out of the left hand side reenter on
@@ -907,7 +907,7 @@ public final class BitVector implements Cloneable, Serializable {
         this.shiftLeft(mod).set((next - mod), shifted);
         return this;
     }
-    
+
     /**
      * Rotates the entire bit pattern of this BitVector to the right by the
      * specified amount. Bits shifted out of the right hand side reenter on
@@ -936,7 +936,7 @@ public final class BitVector implements Cloneable, Serializable {
         this.shiftRight(mod).set(0, shifted);
         return this;
     }
-    
+
     /**
      * Performs a logical AND operation to the bit at the specified
      * index with the bit provided to this method. The bit at the
@@ -953,7 +953,7 @@ public final class BitVector implements Cloneable, Serializable {
         set(index, (get(index) & bit));
         return this;
     }
-    
+
     /**
      * Performs a logical AND operation to all bits of this BitVector
      * with all bits of the BitVector provided to this method. All bits of
@@ -988,7 +988,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return this;
     }
-    
+
     /**
      * Performs a logical OR operation to the bit at the specified
      * index with the bit provided to this method. The bit at the
@@ -1005,7 +1005,7 @@ public final class BitVector implements Cloneable, Serializable {
         set(index, (get(index) | bit));
         return this;
     }
-    
+
     /**
      * Performs a logical OR operation to all bits of this BitVector
      * with all bits of the BitVector provided to this method. All bits of
@@ -1040,7 +1040,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return this;
     }
-    
+
     /**
      * Performs a logical XOR operation to the bit at the specified
      * index with the bit provided to this method. The bit at the
@@ -1057,7 +1057,7 @@ public final class BitVector implements Cloneable, Serializable {
         set(index, (get(index) ^ bit));
         return this;
     }
-    
+
     /**
      * Performs a logical XOR operation to all bits of this BitVector
      * with all bits of the BitVector provided to this method. All bits of
@@ -1092,7 +1092,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return this;
     }
-    
+
     /**
      * Returns the first 8 bits of this BitVector as a primitive byte value.
      * The bits are read in big-endian order, i.e. the bit at index zero is
@@ -1123,7 +1123,7 @@ public final class BitVector implements Cloneable, Serializable {
         return (short) (((bits[0] & 0xff) << 8) 
                        | (bits[1] & 0xff));
     }
-    
+
     /**
      * Returns the first 32 bits of this BitVector as a primitive int value.
      * The bits are read in big-endian order, i.e. the bit at index zero is
@@ -1141,7 +1141,7 @@ public final class BitVector implements Cloneable, Serializable {
               | ((bits[2] & 0xff) << 8) 
               |  (bits[3] & 0xff));
     }
-    
+
     /**
      * Returns the first 64 bits of this BitVector as a primitive long value.
      * The bits are read in big-endian order, i.e. the bit at index zero is
@@ -1163,7 +1163,7 @@ public final class BitVector implements Cloneable, Serializable {
               | ((bits[6] & 0xffL) << 8) 
               |  (bits[7] & 0xffL));
     }
-    
+
     /**
      * Returns the first 32 bits of this BitVector as a primitive float value.
      * The bits are read in big-endian order, i.e. the bit at index zero is
@@ -1177,7 +1177,7 @@ public final class BitVector implements Cloneable, Serializable {
     public float asfloat(){
         return Float.intBitsToFloat(asInt());
     }
-    
+
     /**
      * Returns the first 64 bits of this BitVector as a primitive double value.
      * The bits are read in big-endian order, i.e. the bit at index zero is
@@ -1191,7 +1191,7 @@ public final class BitVector implements Cloneable, Serializable {
     public double asDouble(){
         return Double.longBitsToDouble(asLong());
     }
-    
+
     /**
      * Returns a reference to the internal byte array used to store
      * the state of all bits in this vector. Modifications to this BitVector will
@@ -1203,7 +1203,7 @@ public final class BitVector implements Cloneable, Serializable {
     public byte[] asArray(){
         return this.bits;
     }
-    
+
     /**
      * Returns a copy of the internally used byte array which carries the state
      * of all bits in this vector. Please note that the returned array does not
@@ -1222,7 +1222,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return bytes;
     }
-    
+
     /**
      * Creates and returns a copy of this BitVector. The returned BitVector
      * is a deep copy, i.e. the array holding the internal state is
@@ -1237,7 +1237,7 @@ public final class BitVector implements Cloneable, Serializable {
     public BitVector clone(){
         return new BitVector(this);
     }
-    
+
     /**
      * Returns a string representation of this BitVector. The returned
      * String will only be composed of the characters '1' and '0'
@@ -1257,7 +1257,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return sb.toString();
     }
-    
+
     /**
      * Returns a formatted string representation of this BitVector.
      * This method returns a more human readable string than <code>toString()</code>
@@ -1282,7 +1282,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return sb.toString();
     }
-    
+
     /**
      * Returns a string representation of this BitVector in hexadecimal notation.
      * The returned String will only be composed of the
@@ -1304,7 +1304,7 @@ public final class BitVector implements Cloneable, Serializable {
         final StringBuilder sb = new StringBuilder();
         final char[] hex = { '0', '1', '2', '3', '4', '5', '6', '7',
                              '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-        
+
         final int length = (((next%8) != 0) ? ((next >> 3) + 1) : (next >> 3));
         final boolean printLastNibble = (((next-1)%8) >= 4);
         final int max = (length - 1);
@@ -1316,12 +1316,12 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return sb.toString();
     }
-    
+
     @Override
     public int hashCode(){
         return Arrays.hashCode(this.bits);
     }
-    
+
     @Override
     public boolean equals(Object obj){
         if(!(obj instanceof BitVector)){
@@ -1345,7 +1345,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return true;
     }
-    
+
     /**
      * Wraps the given byte array into a BitVector. This method does not create
      * a copy of the specified byte array but rather uses the reference to it directly.
@@ -1369,7 +1369,7 @@ public final class BitVector implements Cloneable, Serializable {
     public static BitVector wrap(final byte[] bits){
         return new BitVector(bits);
     }
-    
+
     /**
      * Creates a BitVector from specified String object. The String argument should
      * only consist of the characters '0' and '1'. Every character which is not either
@@ -1394,7 +1394,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return vec;
     }
-    
+
     /**
      * Creates a BitVector holding the bytes from the specified array. The content of the
      * byte array passed to this method will be copied into a newly allocated array
@@ -1414,7 +1414,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return new BitVector(copy);
     }
-    
+
     /**
      * Creates a BitVector holding the bits from the specified array. The content of the
      * boolean array passed to this method determines the bit pattern
@@ -1434,7 +1434,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return vec;
     }
-    
+
     /**
      * Creates a BitVector holding the 8 bits from the specified byte value.
      * The returned BitVector has a length of 8. The most significant bit of
@@ -1447,7 +1447,7 @@ public final class BitVector implements Cloneable, Serializable {
     public static BitVector valueOf(final byte b){
         return new BitVector(new byte[]{b});
     }
-    
+
     /**
      * Creates a BitVector holding the 16 bits from the specified short value.
      * The returned BitVector has a length of 16. The most significant bit of
@@ -1462,7 +1462,7 @@ public final class BitVector implements Cloneable, Serializable {
                 (byte) ((s & 0xff00) >> 8),
                 (byte) ((s & 0xff))});
     }
-    
+
     /**
      * Creates a BitVector holding the 32 bits from the specified int value.
      * The returned BitVector has a length of 32. The most significant bit of
@@ -1479,7 +1479,7 @@ public final class BitVector implements Cloneable, Serializable {
                 (byte) ((i & 0xff00) >> 8),
                 (byte) ((i & 0xff))});
     }
-    
+
     /**
      * Creates a BitVector holding the 64 bits from the specified long value.
      * The returned BitVector has a length of 64. The most significant bit of
@@ -1500,7 +1500,7 @@ public final class BitVector implements Cloneable, Serializable {
                 (byte) ((l & 0xff00L) >> 8),
                 (byte) ((l & 0xffL))});
     }
-    
+
     /**
      * Creates a BitVector holding the 32 bits from the specified float value.
      * The returned BitVector has a length of 32
@@ -1512,7 +1512,7 @@ public final class BitVector implements Cloneable, Serializable {
     public static BitVector valueOf(final float f){
         return valueOf(Float.floatToIntBits(f));
     }
-    
+
     /**
      * Creates a BitVector holding the 64 bits from the specified double value.
      * The returned BitVector has a length of 64
@@ -1524,7 +1524,7 @@ public final class BitVector implements Cloneable, Serializable {
     public static BitVector valueOf(final double d){
         return valueOf(Double.doubleToLongBits(d));
     }
-    
+
     /**
      * Constructs a <code>BitVector</code> with the specified size whose bits
      * are all initialized with the specified value
@@ -1550,10 +1550,10 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return vec;
     }
-    
+
     /**
      * Returns a BitVector from the specified String object in hexadecimal notation.
-     * The given String should only be composed of the characters 1-9
+     * The given String should only be composed of the characters 0-9
      * and a-f (case insensitive). Every character which is not in the set of
      * hexadecimal characters will be interpreted as the hex digit 'f'.<br>
      * If the string passed to this method is empty, a BitVector
@@ -1593,7 +1593,7 @@ public final class BitVector implements Cloneable, Serializable {
         vec.next = (hexValues.length() * 4);
         return vec;
     }
-    
+
     /**
      * Creates a BitVector from specified String object. The String argument should
      * only consist of the characters '0' and '1'. Every character which is not either
@@ -1609,7 +1609,7 @@ public final class BitVector implements Cloneable, Serializable {
     public static BitVector fromBinaryString(final String binaryValues){
         return valueOf(binaryValues);
     }
-    
+
     /**
      * Counts the amount of 1s in the BitVector within the specified range
      * 
@@ -1626,7 +1626,7 @@ public final class BitVector implements Cloneable, Serializable {
         }
         return total;
     }
-    
+
     /**
      * Ensures the internal array has at least the length to serve
      * the specified block index, resizing the entire array if necessary.
@@ -1640,7 +1640,7 @@ public final class BitVector implements Cloneable, Serializable {
             copyBytes((bits.length == 0) ? 1 : (bits.length * 2));
         }
     }
-    
+
     /**
      * Ensures the internal array has at least the length to serve
      * the specified block index, resizing the entire array if necessary.
@@ -1655,7 +1655,7 @@ public final class BitVector implements Cloneable, Serializable {
             copyBytes(blockIndex + 1);
         }
     }
-    
+
     /**
      * Copies all bytes of the internal array to a newly allocated
      * array of the specified block length
@@ -1679,7 +1679,7 @@ public final class BitVector implements Cloneable, Serializable {
             this.ones = countOnes(0, next);
         }
     }
-    
+
     /**
      * Checks that the specified bit index is not out of bounds
      * 
@@ -1690,7 +1690,7 @@ public final class BitVector implements Cloneable, Serializable {
             throw new IndexOutOfBoundsException(String.valueOf(index));
         }
     }
-    
+
     /**
      * Checks that the specified indices form a valid range and that the end
      * index is not out of the current length of the internal array
@@ -1712,7 +1712,7 @@ public final class BitVector implements Cloneable, Serializable {
                                               + start + " end=" + end);
         }
     }
-    
+
     /**
      * Checks that the specified indices form a valid range. This method
      * allows the end index to be greater than the current length of the

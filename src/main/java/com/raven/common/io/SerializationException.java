@@ -55,9 +55,9 @@ public class SerializationException extends RuntimeException {
      * wrappers for other throwables
      * 
      * @param cause The cause (which is saved for later retrieval by the
-     *         {@link Throwable#getCause()} method).  (A <tt>null</tt> value
-     *         is permitted, and indicates that the cause is nonexistent or
-     *         unknown.)
+     *        {@link Throwable#getCause()} method).  (A <tt>null</tt> value
+     *        is permitted, and indicates that the cause is nonexistent or
+     *        unknown.)
      */
     public SerializationException(Throwable cause){
         super(cause);
@@ -70,12 +70,12 @@ public class SerializationException extends RuntimeException {
      * <i>not</i> automatically incorporated in this exception's detail
      * message.
      *
-     * @param  message The detail message (which is saved for later retrieval
-     *         by the {@link Throwable#getMessage()} method)
-     * @param  cause The cause (which is saved for later retrieval by the
-     *         {@link Throwable#getCause()} method).  (A <tt>null</tt> value
-     *         is permitted, and indicates that the cause is nonexistent or
-     *         unknown.)
+     * @param message The detail message (which is saved for later retrieval
+     *        by the {@link Throwable#getMessage()} method)
+     * @param cause The cause (which is saved for later retrieval by the
+     *        {@link Throwable#getCause()} method).  (A <tt>null</tt> value
+     *        is permitted, and indicates that the cause is nonexistent or
+     *        unknown.)
      */
     public SerializationException(String message, Throwable cause){
         super(message, cause);
@@ -87,7 +87,7 @@ public class SerializationException extends RuntimeException {
      * enabled or disabled
      *
      * @param message The detail message
-     * @param cause The cause.  (a null value is permitted, and indicates that the
+     * @param cause The cause. (a null value is permitted, and indicates that the
      *        cause is nonexistent or unknown)
      * @param enableSuppression Whether or not suppression is enabled or disabled
      * @param writableStackTrace Whether or not the stack trace should be writable

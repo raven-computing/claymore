@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * with the {@link #getArgument(Class)} method.
  * 
  * <p>A FutureAction can be conveniently created by using one of the
- * provided static utility methods. For exmaple, the follwing code creates a
+ * provided static utility methods. For example, the follwing code creates a
  * FutureAction which executes the specified <code>Runnable</code> in 5 seconds
  * in the future when given to a Chronometer instance:
  * <p><pre><code>
@@ -92,20 +92,20 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  */
 public abstract class FutureAction implements Runnable, Actable, TimedAction {
-    
+
     /**
      * Specifies that a <code>FutureAction</code> should be executed
      * only once, that is one time
      */
     public static final int ONCE = 1;
-    
+
     /**
      * Specifies that a <code>FutureAction</code> should be executed indefinitely
      * until either its <code>cancel()</code> method is invoked or the
      * underlying Chronometer instance is stopped
      */
     public static final int INDEFINITE = -100;
-    
+
     private Executor executor;
     private Chronometer chron;
     private Object argument;
@@ -115,7 +115,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     private AtomicLong isRunning;
     private AtomicBoolean isCancelled;
     private ScheduledFuture<?> future;
-    
+
     /**
      * Constructs a new <code>FutureAction</code> to be executed in the
      * specified amount of milliseconds in the future for the specified
@@ -140,7 +140,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         this.isCancelled = new AtomicBoolean();
         this.setCount(count);
     }
-    
+
     /**
      * Returns the argument of this FutureAction as a type denoted by 
      * the specified Class object
@@ -155,7 +155,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public <T> T getArgument(final Class<T> classOfArg) throws ClassCastException{
         return classOfArg.cast(this.argument);
     }
-    
+
     /**
      * Indicates whether this FutureAction has been cancelled. Once an action
      * is cancelled it cannot be resumed. A completed action is never marked
@@ -170,7 +170,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public boolean isCancelled(){
         return (isCancelled.get() && !isCompleted());
     }
-    
+
     /**
      * Cancels this FutureAction. Already started runs are not interrupted.
      * If this action is not recurring and is already running then this call
@@ -184,7 +184,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             finish();
         }
     }
-    
+
     /**
      * Indicates whether this FutureAction is recurrent. A recurrent action is
      * repetitive in that it will be run mutliple times after the specified
@@ -199,7 +199,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public boolean isRecurrent(){
         return this.count.get() != 1;
     }
-    
+
     /**
      * Returns the number of remaining iterations this FutureAction is run for.
      * For actions which are only run once this method returns 1 if the underlying
@@ -216,7 +216,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public long getCount(){
         return this.count.get();
     }
-    
+
     /**
      * Returns a reference to the Chronometer used to manage a timed
      * execution for this FutureAction
@@ -229,7 +229,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public Chronometer getChronometer(){
         return this.chron;
     }
-    
+
     /**
      * Suspends the calling thread and waits until the FutureAction terminates
      * either through successful completion or cancellation. This method
@@ -243,7 +243,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public synchronized void awaitTermination(){
         awaitTermination0();
     }
-    
+
     /**
      * Suspends the calling thread and waits until the FutureAction
      * terminates either through successful completion or cancellation or the
@@ -260,7 +260,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public synchronized void awaitTermination(long time, TimeUnit unit){
         awaitTermination0(unit.toMillis(time));
     }
-    
+
     /**
      * Indicates whether this FutureAction is currently running
      * 
@@ -271,7 +271,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public boolean isRunning(){
         return this.isRunning.get() > 0;
     }
-    
+
     /**
      * Indicates whether this FutureAction has completed all its executions.
      * A cancelled FutureAction which had pending executions at the time it was
@@ -290,7 +290,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public boolean isCompleted(){
         return (!isRunning() && count.get() == 0);
     }
-    
+
     /**
      * Indicates whether this FutureAction has terminated all its executions.
      * This method returns true if the FutureAction is either cancelled or has
@@ -308,7 +308,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     public boolean isTerminated(){
         return (!isRunning() && ((count.get() == 0) || isCancelled.get()));
     }
-    
+
     /**
      * Sets the number of times this FutureAction should be run in the future.<br>
      * If this FutureAction is already completed or has been cancelled, then setting
@@ -327,7 +327,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         }
         return this;
     }
-    
+
     /**
      * Specifies the Executor to be used for running this FutureAction with.
      * If this method is passed null, then this FutureAction will be executed on
@@ -348,7 +348,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         this.executor = executor;
         return this;
     }
-    
+
     /**
      * Specifies the argument of this FutureAction. During execution, the object
      * passed to this method can be retrieved
@@ -361,7 +361,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         this.argument = argument;
         return this;
     }
-    
+
     /**
      * Sets the initial delay of this FutureAction to the specified
      * amount of time. This value can only be set as long as this FutureAction
@@ -378,7 +378,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         this.destiny.set(unit.toMillis(time));
         return this;
     }
-    
+
     /**
      * Runs this FutureAction now. This method should usually not be called
      * directly by API users. This method gets automatically called by the
@@ -400,7 +400,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         }
     }
-    
+
     /**
      * Sets the Chronometer to be referenced by this FutureAction
      * 
@@ -410,7 +410,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     protected void setChronometer(final Chronometer chron){
         this.chron = chron;
     }
-    
+
     /**
      * Sets the ScheduledFuture object of this FutureAction
      * 
@@ -420,7 +420,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     protected void setScheduledFuture(final ScheduledFuture<?> futureTask){
         this.future = futureTask;
     }
-    
+
     /**
      * Sets the cancelled status of this FutureAction to the specified value
      * 
@@ -430,7 +430,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     protected void setCancelled(final boolean value){
         this.isCancelled.set(value);
     }
-    
+
     /**
      * Gets the Executor of this FutureAction
      * 
@@ -439,7 +439,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     protected Executor getExecutor(){
         return this.executor;
     }
-    
+
     /**
      * Gets the initial delay of this FutureAction in milliseconds
      * 
@@ -449,7 +449,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     protected long destiny(){
         return this.destiny.get();
     }
-    
+
     /**
      * Gets the interval between recurrent executions in milliseconds
      * 
@@ -459,7 +459,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     protected long interval(){
         return this.interval.get();
     }
-    
+
     /**
      * Sets the interval of this FutureAction to the specified value
      * 
@@ -470,7 +470,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         this.interval.set(interval);
         return this;
     }
-    
+
     private void run1(){
         if(executor != null){
             this.executor.execute(() -> run0());
@@ -478,7 +478,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             run0();
         }
     }
-    
+
     private void run0(){
         this.isRunning.incrementAndGet();
         try{
@@ -490,7 +490,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         }
     }
-    
+
     private void finish(){
         if(future != null){
             if(!future.cancel(false)){
@@ -501,11 +501,11 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         }
         markTerminated();
     }
-    
+
     private long decrement(final long input){
         return ((input > 0) ? (input - 1) : input);
     }
-    
+
     private long getCountAndDecrement(){
         long prev, next;
         do{
@@ -514,7 +514,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         }while(!count.compareAndSet(prev, next));
         return prev;
     }
-    
+
     private void awaitTermination0(){
         while(!isTerminated()){
             try{
@@ -522,7 +522,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }catch(InterruptedException ex){ }
         }
     }
-    
+
     private void awaitTermination0(long timeout){
         final long limit = now() + timeout;
         while(!isTerminated() && (timeout > 0)){
@@ -535,11 +535,11 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         }
     }
-    
+
     private synchronized void markTerminated(){
         this.notifyAll();
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to run in
      * the specified amount of time units in the future. The specified
@@ -563,7 +563,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         };
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to run in
      * the specified amount of time units in the future. The specified
@@ -587,7 +587,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         };
     }
-    
+
     /**
      * Creates a recurrent <code>FutureAction</code> which is scheduled to
      * run indefinitely in the specified amount of time units in the future.
@@ -617,7 +617,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         };
     }
-    
+
     /**
      * Creates a recurrent <code>FutureAction</code> which is scheduled to
      * run indefinitely in the specified amount of time units in the future.
@@ -647,7 +647,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         };
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to run once
      * at the specified Instant of time in the future.
@@ -677,7 +677,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         };
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to run once
      * at the specified Instant of time in the future.
@@ -707,7 +707,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         };
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to run once
      * at the point of time in the future specified by the ZonedDateTime.
@@ -731,7 +731,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
 
         return FutureAction.at(time.toInstant(), actable);
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to run once
      * at the point of time in the future specified by the ZonedDateTime.
@@ -755,7 +755,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         
         return FutureAction.at(time.toInstant(), runnable);
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to run once
      * at the point of time in the future specified by the LocalTime.
@@ -789,7 +789,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         }
         return FutureAction.at(date, actable);
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to run once
      * at the point of time in the future specified by the LocalTime.
@@ -823,7 +823,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
         }
         return FutureAction.at(date, runnable);
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to always run
      * at the time in the future specified by the LocalTime.
@@ -864,7 +864,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         }.setInterval(oneDay.toMillis());
     }
-    
+
     /**
      * Creates a <code>FutureAction</code> which is scheduled to always run
      * at the time in the future specified by the LocalTime.
@@ -905,7 +905,7 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
             }
         }.setInterval(oneDay.toMillis());
     }
-    
+
     /**
      * Returns the current time in milliseconds
      * 
@@ -914,5 +914,4 @@ public abstract class FutureAction implements Runnable, Actable, TimedAction {
     private static long now(){
         return System.currentTimeMillis();
     }
-    
 }

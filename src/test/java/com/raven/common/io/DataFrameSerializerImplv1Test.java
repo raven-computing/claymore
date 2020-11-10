@@ -16,8 +16,6 @@
 
 package com.raven.common.io;
 
-import static org.junit.Assert.*;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -49,8 +47,10 @@ import com.raven.common.struct.StringColumn;
 
 /**
  * Tests for DataFrameSerializer implementation.<br>
- * This class tests the legacy text-based version 1 format.
- *
+ * This class tests the legacy text-based version 1 format.<br>
+ * The legacy format version 1 is not supported anymore.
+ * Deserialization should fail exceptionally. 
+ * 
  */
 public class DataFrameSerializerImplv1Test {
 
@@ -313,44 +313,23 @@ public class DataFrameSerializerImplv1Test {
     @After
     public void tearDown(){ }
 
-    @Test
-    public void testDeserialization() throws Exception{
-        DataFrame res = DataFrameSerializer.deserialize(truthImplv1);
-        assertFalse("DataFrame should not be empty", res.isEmpty());
-        assertTrue("DataFrame row count should be 5", res.rows() == 5);
-        assertTrue("DataFrame column count should be 9", res.columns() == 9);
-        assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type DefaultDataFrame", res instanceof DefaultDataFrame);
+    @Test(expected = SerializationException.class)
+    public void testDeserialization(){
+        DataFrameSerializer.deserialize(truthImplv1);
     }
 
-    @Test
-    public void testDeserializationEscaped() throws Exception{
-        DataFrame res = DataFrameSerializer.deserialize(truthEscapedImplv1);
-        assertFalse("DataFrame should not be empty", res.isEmpty());
-        assertTrue("DataFrame row count should be 5", res.rows() == 5);
-        assertTrue("DataFrame column count should be 9", res.columns() == 9);
-        assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type DefaultDataFrame", res instanceof DefaultDataFrame);
+    @Test(expected = SerializationException.class)
+    public void testDeserializationEscaped(){
+        DataFrameSerializer.deserialize(truthEscapedImplv1);
     }
 
-    @Test
-    public void testDeserializationNullableEscaped() throws Exception{
-        DataFrame res = DataFrameSerializer.deserialize(truthEscapedNullableImplv1);
-        assertFalse("DataFrame should not be empty", res.isEmpty());
-        assertTrue("DataFrame row count should be 3", res.rows() == 3);
-        assertTrue("DataFrame column count should be 9", res.columns() == 9);
-        assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type NullableDataFrame", res instanceof NullableDataFrame);
+    @Test(expected = SerializationException.class)
+    public void testDeserializationNullableEscaped(){
+        DataFrameSerializer.deserialize(truthEscapedNullableImplv1);
     }
 
-    @Test
-    public void testFromBase64String() throws Exception{
-        DataFrame res = DataFrameSerializer.fromBase64(truthBase64Implv1);
-        assertFalse("DataFrame should not be empty", res.isEmpty());
-        assertTrue("DataFrame row count should be 3", res.rows() == 3);
-        assertTrue("DataFrame column count should be 9", res.columns() == 9);
-        assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type NullableDataFrame", res instanceof NullableDataFrame);
+    @Test(expected = SerializationException.class)
+    public void testFromBase64String(){
+        DataFrameSerializer.fromBase64(truthBase64Implv1);
     }
-
 }

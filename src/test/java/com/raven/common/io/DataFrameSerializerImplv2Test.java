@@ -29,9 +29,11 @@ import org.junit.Test;
 
 import com.raven.common.io.DataFrameSerializer;
 import com.raven.common.struct.BinaryColumn;
+import com.raven.common.struct.BitVector;
 import com.raven.common.struct.BooleanColumn;
 import com.raven.common.struct.ByteColumn;
 import com.raven.common.struct.CharColumn;
+import com.raven.common.struct.Column;
 import com.raven.common.struct.DataFrame;
 import com.raven.common.struct.DefaultDataFrame;
 import com.raven.common.struct.DoubleColumn;
@@ -124,36 +126,39 @@ public class DataFrameSerializerImplv2Test {
                 }));
 
         // expected uncompressed
-        truthImplv2 = new byte[]{123, 118, 58, 50, 59, 100, 0, 0, 0, 5, 0, 0, 0, 10, 98, 121, 116, 101, 67, 111, 108, 0,
-                115, 104, 111, 114, 116, 67, 111, 108, 0, 105, 110, 116, 67, 111, 108, 0, 108, 111, 110, 103, 67, 111,
-                108, 0, 115, 116, 114, 105, 110, 103, 67, 111, 108, 0, 99, 104, 97, 114, 67, 111, 108, 0, 102, 108, 111,
-                97, 116, 67, 111, 108, 0, 100, 111, 117, 98, 108, 101, 67, 111, 108, 0, 98, 111, 111, 108, 101, 97, 110,
-                67, 111, 108, 0, 98, 105, 110, 97, 114, 121, 67, 111, 108, 0, 1, 2, 3, 4, 5, 8, 6, 7, 9, 19, 125, 10,
-                20, 30, 40, 50, 0, 11, 0, 21, 0, 31, 0, 41, 0, 51, 0, 0, 0, 12, 0, 0, 0, 22, 0, 0, 0, 32, 0, 0, 0, 42,
-                0, 0, 0, 52, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0, 0, 0, 0, 33, 0, 0, 0, 0, 0,
-                0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 53, 49, 48, 0, 50, 48, 0, 51, 48, 0, 52, 48, 0, 53, 48, 0, 0, 97, 0, 98,
-                0, 99, 0, 100, 0, 101, 65, 33, -103, -102, 65, -95, -103, -102, 65, -14, 102, 102, 66, 33, -103, -102,
-                66, 74, 0, 0, 64, 38, 51, 51, 51, 51, 51, 51, 64, 53, 51, 51, 51, 51, 51, 51, 64, 63, 76, -52, -52, -52,
-                -52, -51, 64, 68, -77, 51, 51, 51, 51, 51, 64, 73, -64, 0, 0, 0, 0, 0, -88, 0, 0, 0, 5, 1, 2, 3, 4, 5,
-                0, 0, 0, 5, 5, 4, 3, 2, 1, 0, 0, 0, 5, 5, 2, 1, 2, 3, 0, 0, 0, 5, 2, 1, 4, 5, 3, 0, 0, 0, 5, 3, 1, 2, 5, 4};
+        truthImplv2 = BitVector.fromHexString(
+                      "7b763a323b64000000050000000a62797465436f6c0073686f7274436f6c00696e74436f6"
+                    + "c006c6f6e67436f6c00737472696e67436f6c0063686172436f6c00666c6f6174436f6c00"
+                    + "646f75626c65436f6c00626f6f6c65616e436f6c0062696e617279436f6c0001020304050"
+                    + "8060709137d0a141e2832000b0015001f002900330000000c00000016000000200000002a"
+                    + "00000034000000000000000d00000000000000170000000000000021000000000000002b0"
+                    + "00000000000003531300032300033300034300035300061626364654121999a41a1999a41"
+                    + "f266664221999a424a000040263333333333334035333333333333403f4ccccccccccd404"
+                    + "4b333333333334049c00000000000a8000000050102030405000000050504030201000000"
+                    + "050502010203000000050201040503000000050301020504")
+                      .asArray();
 
         // expected compressed
-        truthImplv2Compressed = new byte[]{100, 102, -85, 46, -77, 50, -78, 78, 97, 96, 96, 96, 5, 98, -82, -92, -54,
-                -110, 84, -25, -4, 28, -122, -30, -116, -4, -94, 18, 16, 35, 51, 15, 76, -27, -28, -25, -91, -125, -59,
-                75, -118, 50, 33, -84, -28, -116, -60, 34, 16, -99, -106, -109, -97, 8, 86, -110, -110, 95, -102, -108,
-                3, -42, -100, -108, -97, -97, -109, -102, -104, 7, 102, 102, -26, 37, 22, 85, -126, 88, -116, 76, -52,
-                44, -84, 28, 108, -20, -100, -62, -75, 92, 34, 114, 26, 70, 12, -36, 12, -94, 12, -14, 12, -102, 12,
-                -58, 64, 123, 121, -128, 88, 12, -120, 21, -128, 88, 11, -120, 77, 24, 32, -128, 23, 74, -117, 67, 105,
-                69, 40, -83, 13, -91, 77, 13, 13, 24, -116, 12, 24, -116, 13, 24, 76, 12, 24, 76, 13, 24, 24, 18, 25,
-                -110, 24, -110, 25, 82, 24, 82, 29, 21, 103, -50, 114, 92, 8, -60, -97, -46, -46, -100, -128, 108, 39,
-                47, 6, 6, 7, 53, 99, 48, 112, 48, -123, -46, -10, 62, 103, -128, -32, -84, -125, -53, 102, 8, -33, -13,
-                0, -40, -44, 21, -96, -48, 0, -69, 23, -60, 96, 101, 97, 102, 98, 4, 51, -104, -128, 98, 32, 6, 19, 35,
-                11, 43, -104, -63, -52, -56, -60, -54, 2, 0, -39, -40, 61, -82};
+        truthImplv2Compressed = BitVector.fromHexString(
+                      "6466ab2eb332b24e616060600562aea4ca9254e7fc1c86e28"
+                    + "cfca2121023330f4ce5e4e7a583c54b8a3221ace48cc42210"
+                    + "9d96939f085692925f9a9403d69c949f9f939a98076666e62"
+                    + "5165582588c4ccc2cac1c6cec9cc2b55c22721a460cdc0ca2"
+                    + "0cf20c9a0cc6407b7980580c881580580b884d182080174a8"
+                    + "b43694528ad0da54d0d0d188c0c188c0d184c0c184c0d1812"
+                    + "939253521d1567ce725c08c49fd2d29c806c272f060607356"
+                    + "330703085d2f63e6780e0ac83cb6608dff300d8c015a08000"
+                    + "3b15c460656166620433988062200613230b2b98c1ccc8c4c"
+                    + "a020011103dae")
+                      .asArray();
+        
 
-        truthBase64Implv2 = "ZGarLrMysk5hYGBgBWKupMqSVOf8HIbijPyiEhAjMw9M5eTnpYPFS4oyIazkjMQiEJ2Wk58IVpKSX5qUA9acl"
-                + "J+fk5qYB2Zm5iUWVYJYjEzMLKwcbOycwrVcInIaRgzcDKIM8gyaDMZAe3mAWAyIFYBYC4hNGCCAF0qLQ2lFKK0NpU0NDRiM"
-                + "DBiMDRhMDBhMDRgYEhmSGJIZUhhSHRVnznJcCMSf0tKcgGwnLwYGBzVjMHAwhdL2PmeA4KyDy2YI3/MA2NQVoNAAuxfEYGVh"
-                + "ZmIEM5iAYiAGEyMLK5jBzMjEygIA2dg9rg==";
+        truthBase64Implv2 = "ZGarLrMysk5hYGBgBWKupMqSVOf8HIbijPyiEhAjMw9M5eTnpYPFS4oyIaz"
+                          + "kjMQiEJ2Wk58IVpKSX5qUA9aclJ+fk5qYB2Zm5iUWVYJYjEzMLKwcbOycwr"
+                          + "VcInIaRgzcDKIM8gyaDMZAe3mAWAyIFYBYC4hNGCCAF0qLQ2lFKK0NpU0ND"
+                          + "RiMDBiMDRhMDBhMDRgSk5JTUh0VZ85yXAjEn9LSnIBsJy8GBgc1YzBwMIXS"
+                          + "9j5ngOCsg8tmCN/zANjAFaCAADsVxGBlYWZiBDOYgGIgBhMjCyuYwczIxMo"
+                          + "CABEQPa4=";
 
 
 
@@ -181,7 +186,7 @@ public class DataFrameSerializerImplv2Test {
                         "ABCD","2!\"0,.",null,"","#5{=0>}"
                 }),
                 new NullableCharColumn(new Character[]{
-                        ',','b',null,'d','\u0000'
+                        ',','b',null,'d','?'
                 }),
                 new NullableFloatColumn(new Float[]{
                         10.1f,null,0.0f,null,50.5f
@@ -200,32 +205,41 @@ public class DataFrameSerializerImplv2Test {
                     null
                 }));
 
-        truthNullableImplv2 = new byte[]{123, 118, 58, 50, 59, 110, 0, 0, 0, 5, 0, 0, 0, 10, 98, 121, 116, 101, 67, 111,
-                108, 0, 115, 104, 111, 114, 116, 67, 111, 108, 0, 105, 110, 116, 67, 111, 108, 0, 108, 111, 110, 103,
-                67, 111, 108, 0, 115, 116, 114, 105, 110, 103, 67, 111, 108, 0, 99, 104, 97, 114, 67, 111, 108, 0, 102,
-                108, 111, 97, 116, 67, 111, 108, 0, 100, 111, 117, 98, 108, 101, 67, 111, 108, 0, 98, 111, 111, 108,
-                101, 97, 110, 67, 111, 108, 0, 98, 105, 110, 97, 114, 121, 67, 111, 108, 0, 10, 11, 12, 13, 14, 17, 15,
-                16, 18, 20, 0, 0, 0, 4, -42, -22, -77, 64, 125, 10, 0, 0, 0, 50, 0, 11, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 12, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 53, 65, 66, 67, 68, 0, 50, 33, 34,
-                48, 44, 46, 0, 0, 0, 35, 53, 123, 61, 48, 62, 125, 0, 0, 44, 0, 98, 0, 0, 0, 100, 0, 0, 65, 33, -103,
-                -102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66, 74, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 73, -64, 0, 0, 0, 0, 0, -120, 0, 0, 0, 1, 0, 0, 0,
-                0, 5, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 7, 2, 1, 4, 5, 74, 5, 3, 0, 0, 0, 0};
+        truthNullableImplv2 = BitVector.fromHexString(
+                              "7b763a323b6e000000050000000a62797465436f6c0073686"
+                            + "f7274436f6c00696e74436f6c006c6f6e67436f6c00737472"
+                            + "696e67436f6c0063686172436f6c00666c6f6174436f6c006"
+                            + "46f75626c65436f6c00626f6f6c65616e436f6c0062696e61"
+                            + "7279436f6c000a0b0c0d0e110f10121400000003d6eacd7d0"
+                            + "a00000032000b00150000000000000000000c000000000000"
+                            + "0020000000000000000000000000000000000000000000000"
+                            + "0000000000000000021000000000000000000000000000000"
+                            + "354142434400322122302c2e00000023357b3d303e7d002c6"
+                            + "200643f4121999a000000000000000000000000424a000000"
+                            + "0000000000000000000000000000000000000000000000000"
+                            + "00000000000004049c0000000000088000000010000000005"
+                            + "05040302010000000000000007020104054a05030000000000")
+                              .asArray();
 
-        truthNullableImplv2Compressed = new byte[]{100, 102, -85, 46, -77, 50, -78, -50, 99, 96, 96, 96, 5, 98, -82,
-                -92, -54, -110, 84, -25, -4, 28, -122, -30, -116, -4, -94, 18, 16, 35, 51, 15, 76, -27, -28, -25, -91,
-                -125, -59, 75, -118, 50, 33, -84, -28, -116, -60, 34, 16, -99, -106, -109, -97, 8, 86, -110, -110, 95,
-                -102, -108, 3, -42, -100, -108, -97, -97, -109, -102, -104, 7, 102, 102, -26, 37, 22, 85, -126, 88, 92,
-                -36, 60, -68, 124, -126, -4, 2, 66, 34, 64, 123, 88, -82, -67, -38, -20, 80, -53, 5, 100, 25, 49, 112,
-                51, -120, 50, -64, 0, 15, -108, 86, 96, -64, 15, 20, -47, -8, -90, -114, 78, -50, 46, 12, 70, -118, 74,
-                6, 58, 122, 64, -82, -78, 105, -75, -83, -127, 93, 45, 3, -125, 14, 67, 18, -112, -101, -62, -64, -32,
-                -88, 56, 115, 22, -78, 6, 39, 47, 2, 54, 0, -127, -125, -25, 1, 48, -35, 1, -60, -116, 32, 6, 43, 43,
-                11, 51, 19, 35, 84, -106, -99, -119, -111, -123, -43, -117, -107, 25, -60, 6, 0, -28, 118, 48, 82};
+        truthNullableImplv2Compressed = BitVector.fromHexString(
+                               "6466ab2eb332b2ce636060600562aea4ca9254e7fc1c86e28"
+                             + "cfca2121023330f4ce5e4e7a583c54b8a3221ace48cc42210"
+                             + "9d96939f085692925f9a9403d69c949f9f939a98076666e62"
+                             + "5165582585cdc3cbc7c82fc024222407b98afbd3a5bcb0564"
+                             + "183170338832c0000f945660c00f14d1f8a68e4ece2e0c468"
+                             + "a4a063a7a40aeb269b5ad815d2d834e12438abda3e2cc59c8"
+                             + "6a9dbc08180e040e9e07c0740710338218acac2ccc4c8c505"
+                             + "976264616562f56663007000fc1306a")
+                               .asArray();
 
-        truthNullableBase64Implv2 = "ZGarLrMyss5jYGBgBWKupMqSVOf8HIbijPyiEhAjMw9M5eTnpYPFS4oyIazkjMQiEJ2Wk58IVpKSX5qUA"
-                + "9aclJ+fk5qYB2Zm5iUWVYJYXNw8vHyC/AJCIkB7WK692uxQywVkGTFwM4gywAAPlFZgwA8U0fimjk7OLgxGikoGOnpArrJpta2BX"
-                + "S0Dgw5DEpCbwsDgqDhzFrIGJy8CNgCBg+cBMN0BxIwgBisrCzMTI1SWnYmRhdWLlRnEBgDkdjBS";
+
+
+        truthNullableBase64Implv2 = "ZGarLrMyss5jYGBgBWKupMqSVOf8HIbijPyiEhAjMw9M"
+                                  + "5eTnpYPFS4oyIazkjMQiEJ2Wk58IVpKSX5qUA9aclJ+f"
+                                  + "k5qYB2Zm5iUWVYJYXNw8vHyC/AJCIkB7mK+9OlvLBWQY"
+                                  + "MXAziDLAAA+UVmDADxTR+KaOTs4uDEaKSgY6ekCusmm1"
+                                  + "rYFdLYNOEkOKvaPizFnIap28CBgOBA6eB8B0BxAzghis"
+                                  + "rCzMTIxQWXYmRhZWL1ZmMAcAD8Ewag==";
 
     }
 
@@ -247,25 +261,33 @@ public class DataFrameSerializerImplv2Test {
     @Test
     public void testSerializationDefault() throws Exception{
         byte[] bytes = DataFrameSerializer.serialize(dfDefault);
-        assertArrayEquals("Serialized Dataframe does not match expected bytes", truthImplv2, bytes);
+        assertArrayEquals(
+                "Serialized Dataframe does not match expected bytes",
+                truthImplv2, bytes);
     }
 
     @Test
     public void testSerializationDefaultCompress() throws Exception{
         byte[] bytes = DataFrameSerializer.serialize(dfDefault, MODE_COMPRESSED);
-        assertArrayEquals("Serialized Dataframe does not match expected bytes", truthImplv2Compressed, bytes);
+        assertArrayEquals(
+                "Serialized Dataframe does not match expected bytes",
+                truthImplv2Compressed, bytes);
     }
 
     @Test
     public void testSerializationNullable() throws Exception{
         byte[] bytes = DataFrameSerializer.serialize(dfNullable, MODE_UNCOMPRESSED);
-        assertArrayEquals("Serialized Dataframe does not match expected bytes", truthNullableImplv2, bytes);
+        assertArrayEquals(
+                "Serialized Dataframe does not match expected bytes",
+                truthNullableImplv2, bytes);
     }
 
     @Test
     public void testSerializationNullableCompressed() throws Exception{
         byte[] bytes = DataFrameSerializer.serialize(dfNullable, MODE_COMPRESSED);
-        assertArrayEquals("Serialized Dataframe does not match expected bytes", truthNullableImplv2Compressed, bytes);
+        assertArrayEquals(
+                "Serialized Dataframe does not match expected bytes",
+                truthNullableImplv2Compressed, bytes);
     }
 
     @Test
@@ -275,7 +297,9 @@ public class DataFrameSerializerImplv2Test {
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
         assertTrue("DataFrame column count should be 9", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type DefaultDataFrame", res instanceof DefaultDataFrame);
+        assertTrue("DataFrame should be of type DefaultDataFrame",
+                res instanceof DefaultDataFrame);
+
         assertTrue("DataFrame differs in content", res.equals(dfDefault));
     }
 
@@ -286,7 +310,8 @@ public class DataFrameSerializerImplv2Test {
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
         assertTrue("DataFrame column count should be 9", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type DefaultDataFrame", res instanceof DefaultDataFrame);
+        assertTrue("DataFrame should be of type DefaultDataFrame",
+                res instanceof DefaultDataFrame);
         assertTrue("DataFrame differs in content", res.equals(dfDefault));
     }
 
@@ -297,7 +322,9 @@ public class DataFrameSerializerImplv2Test {
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
         assertTrue("DataFrame column count should be 9", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type NullableDataFrame", res instanceof NullableDataFrame);
+        assertTrue("DataFrame should be of type NullableDataFrame",
+                res instanceof NullableDataFrame);
+
         assertTrue("DataFrame differs in content", res.equals(dfNullable));
     }
 
@@ -308,20 +335,40 @@ public class DataFrameSerializerImplv2Test {
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
         assertTrue("DataFrame column count should be 9", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type NullableDataFrame", res instanceof NullableDataFrame);
+        assertTrue("DataFrame should be of type NullableDataFrame",
+                res instanceof NullableDataFrame);
+
         assertTrue("DataFrame differs in content", res.equals(dfNullable));
+    }
+    
+    @Test
+    public void testToBase64Default() throws Exception{
+        String s = DataFrameSerializer.toBase64(dfDefault);
+        DataFrame df = DataFrameSerializer.fromBase64(s);
+        assertEquals("Dataframe does not match original", df, dfDefault);
+    }
+    
+    @Test
+    public void testToBase64Nullable() throws Exception{
+        String s = DataFrameSerializer.toBase64(dfNullable);
+        DataFrame df = DataFrameSerializer.fromBase64(s);
+        assertEquals("Dataframe does not match original", df, dfNullable);
     }
 
     @Test
     public void testToBase64StringDefault() throws Exception{
         String s = DataFrameSerializer.toBase64(dfDefault);
-        assertEquals("Serialized Dataframe does not match expected Base64 string", truthBase64Implv2, s);
+        assertEquals(
+                "Serialized Dataframe does not match expected Base64 string",
+                truthBase64Implv2, s);
     }
 
     @Test
     public void testToBase64StringNullable() throws Exception{
         String s = DataFrameSerializer.toBase64(dfNullable);
-        assertEquals("Serialized Dataframe does not match expected Base64 string", truthNullableBase64Implv2, s);
+        assertEquals(
+                "Serialized Dataframe does not match expected Base64 string",
+                truthNullableBase64Implv2, s);
     }
 
     @Test
@@ -331,7 +378,9 @@ public class DataFrameSerializerImplv2Test {
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
         assertTrue("DataFrame column count should be 9", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type DefaultDataFrame", res instanceof DefaultDataFrame);
+        assertTrue("DataFrame should be of type DefaultDataFrame",
+                res instanceof DefaultDataFrame);
+
         assertTrue("DataFrame differs in content", res.equals(dfDefault));
     }
 
@@ -342,7 +391,9 @@ public class DataFrameSerializerImplv2Test {
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
         assertTrue("DataFrame column count should be 9", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
-        assertTrue("DataFrame should be of type NullableDataFrame", res instanceof NullableDataFrame);
+        assertTrue("DataFrame should be of type NullableDataFrame",
+                res instanceof NullableDataFrame);
+
         assertTrue("DataFrame differs in content", res.equals(dfNullable));
     }
 
@@ -372,6 +423,32 @@ public class DataFrameSerializerImplv2Test {
         byte[] bytes = DataFrameSerializer.serialize(dfNullable, MODE_COMPRESSED);
         DataFrame res = DataFrameSerializer.deserialize(bytes);
         assertTrue("DataFrames are not equal", res.equals(dfNullable));
+    }
+    
+    @Test
+    public void stressTestDefault() throws Exception{
+        DataFrame df = DataFrame.copy(dfDefault);
+        for(int i=0; i<df.columns(); ++i){
+            Column col = df.getColumn(0);
+            df.removeColumn(0);
+            df.addColumn(col);
+            byte[] bytes = DataFrameSerializer.serialize(df);
+            df = DataFrameSerializer.deserialize(bytes);
+        }
+        assertTrue("DataFrame does not match original", df.equals(dfDefault));
+    }
+    
+    @Test
+    public void stressTestNullable() throws Exception{
+        DataFrame df = DataFrame.copy(dfNullable);
+        for(int i=0; i<df.columns(); ++i){
+            Column col = df.getColumn(0);
+            df.removeColumn(0);
+            df.addColumn(col);
+            byte[] bytes = DataFrameSerializer.serialize(df);
+            df = DataFrameSerializer.deserialize(bytes);
+        }
+        assertTrue("DataFrame does not match original", df.equals(dfNullable));
     }
 
 }

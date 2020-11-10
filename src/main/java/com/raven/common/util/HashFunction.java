@@ -25,7 +25,7 @@ package com.raven.common.util;
  *
  */
 public enum HashFunction implements ByteFunction {
-    
+
     /**
      * A hash function implementing the MD5 algorithm.
      *
@@ -36,7 +36,7 @@ public enum HashFunction implements ByteFunction {
             return Hash.md5(input);
         }
     },
-    
+
     /**
      * A hash function implementing the SHA-1 algorithm.
      *
@@ -47,7 +47,7 @@ public enum HashFunction implements ByteFunction {
             return Hash.sha1(input);
         }
     },
-    
+
     /**
      * A hash function implementing the SHA-224 algorithm.
      *
@@ -58,7 +58,7 @@ public enum HashFunction implements ByteFunction {
             return Hash.sha224(input);
         }
     },
-    
+
     /** 
      * A hash function implementing the SHA-256 algorithm.
      *
@@ -69,7 +69,7 @@ public enum HashFunction implements ByteFunction {
             return Hash.sha256(input);
         }
     },
-    
+
     /**
      * A hash function implementing the SHA-384 algorithm.
      *
@@ -80,7 +80,7 @@ public enum HashFunction implements ByteFunction {
             return Hash.sha384(input);
         }
     },
-    
+
     /**
      * A hash function implementing the SHA-512 algorithm.
      *
@@ -91,5 +91,5 @@ public enum HashFunction implements ByteFunction {
             return Hash.sha512(input);
         }
     };
-    
+
 }

@@ -44,45 +44,59 @@ import com.raven.common.struct.StringColumn;
  *
  */
 public class CSVReaderTest {
-    
+
     String csv1 = "/test.csv";
-    
+
     DataFrame df1 = new DefaultDataFrame(
             new IntColumn("AttrA", new int[]{1,2,3}),
             new DoubleColumn("AttrB", new double[]{1.1,2.2,3.3}),
             new StringColumn("AttrC", new String[]{"C1","C2","C,3"}));
-    
+
     DataFrame df1StringsOnly = new DefaultDataFrame(
             new StringColumn("AttrA", new String[]{"1","2","3"}),
             new StringColumn("AttrB", new String[]{"1.1","2.2","3.3"}),
             new StringColumn("AttrC", new String[]{"C1","C2","C,3"}));
-    
+
     String csv1NoHeader = "/test_noheader.csv";
-    
+
     String csv2Nullable = "/test_nullable.csv";
-    
+
     DataFrame df2Nullable = new NullableDataFrame(
             new NullableIntColumn("AttrA", new Integer[]{null,2,3}),
             new NullableDoubleColumn("AttrB", new Double[]{1.1,null,3.3}),
             new NullableStringColumn("AttrC", new String[]{"C1","C2",null}));
-    
+
     DataFrame df2NullableStringsOnly = new NullableDataFrame(
             new NullableStringColumn("AttrA", new String[]{null,"2","3"}),
             new NullableStringColumn("AttrB", new String[]{"1.1",null,"3.3"}),
             new NullableStringColumn("AttrC", new String[]{"C1","C2",null}));
-    
+
+    String csv2NullableMalformed = "/test_nullable_malformed.csv";
+
+    DataFrame df2NullableMalformed = new NullableDataFrame(
+            new NullableIntColumn("AttrA", new Integer[]{11,22,33,null}),
+            new NullableDoubleColumn("AttrB", new Double[]{null,null,3.3,null}),
+            new NullableDoubleColumn("AttrC", new Double[]{null,2.2,null,4.4}),
+            new NullableStringColumn("AttrD", new String[]{null,null,null,null}));
+
+    DataFrame df2NullableMalformedStringsOnly = new NullableDataFrame(
+            new NullableStringColumn("AttrA", new String[]{"11","22","33",null}),
+            new NullableStringColumn("AttrB", new String[]{null,null,"3.3",null}),
+            new NullableStringColumn("AttrC", new String[]{null,"2.2",null,"4.4"}),
+            new NullableStringColumn("AttrD", new String[]{null,null,null,null}));
+
     @BeforeClass
     public static void setUpBeforeClass(){ }
-    
+
     @AfterClass
     public static void tearDownAfterClass(){ }
-    
+
     @Before
     public void setUp(){ }
-    
+
     @After
     public void tearDown(){ }
-    
+
     @Test
     public void testFileReadPlain() throws IOException{
         URL url = this.getClass().getResource(csv1);
@@ -94,7 +108,7 @@ public class CSVReaderTest {
         DataFrame df = new CSVReader(file).read();
         assertEquals("DataFrames do not match", df1StringsOnly, df);
     }
-    
+
     @Test
     public void testFileReadWithTypes() throws IOException{
         URL url = this.getClass().getResource(csv1);
@@ -109,7 +123,7 @@ public class CSVReaderTest {
         
         assertEquals("DataFrames do not match", df1, df);
     }
-    
+
     @Test
     public void testFileReadPlainAsync() throws Exception{
         URL url = this.getClass().getResource(csv1);
@@ -122,7 +136,7 @@ public class CSVReaderTest {
         DataFrame df = future.get();
         assertEquals("DataFrames do not match", df1StringsOnly, df);
     }
-    
+
     @Test
     public void testFileReadPlainNoHeader() throws IOException{
         URL url = this.getClass().getResource(csv1NoHeader);
@@ -136,7 +150,7 @@ public class CSVReaderTest {
         df1StringsOnly.removeColumnNames();
         assertEquals("DataFrames do not match", df1StringsOnly, df);
     }
-    
+
     @Test
     public void testFileReadWithTypesNoHeader() throws IOException{
         URL url = this.getClass().getResource(csv1NoHeader);
@@ -154,7 +168,7 @@ public class CSVReaderTest {
         df1.removeColumnNames();
         assertEquals("DataFrames do not match", df1, df);
     }
-    
+
     @Test
     public void testFileReadPlainNullable() throws IOException{
         URL url = this.getClass().getResource(csv2Nullable);
@@ -166,7 +180,7 @@ public class CSVReaderTest {
         DataFrame df = new CSVReader(file).read();
         assertEquals("DataFrames do not match", df2NullableStringsOnly, df);
     }
-    
+
     @Test
     public void testFileReadWithTypesNullable() throws IOException{
         URL url = this.getClass().getResource(csv2Nullable);
@@ -181,7 +195,34 @@ public class CSVReaderTest {
         
         assertEquals("DataFrames do not match", df2Nullable, df);
     }
-    
+
+    @Test
+    public void testFileReadPlainNullableMalformed() throws IOException{
+        URL url = this.getClass().getResource(csv2NullableMalformed);
+        if(url == null){
+            fail("Test resource \"" + csv2NullableMalformed + "\" was not found");
+            return;
+        }
+        File file = new File(url.getFile());
+        DataFrame df = new CSVReader(file).read();
+        assertEquals("DataFrames do not match", df2NullableMalformedStringsOnly, df);
+    }
+
+    @Test
+    public void testFileReadWithTypesNullableMalformed() throws IOException{
+        URL url = this.getClass().getResource(csv2NullableMalformed);
+        if(url == null){
+            fail("Test resource \"" + csv2Nullable + "\" was not found");
+            return;
+        }
+        File file = new File(url.getFile());
+        DataFrame df = new CSVReader(file)
+                .useColumnTypes(Integer.class, Double.class, Double.class, String.class)
+                .read();
+        
+        assertEquals("DataFrames do not match", df2NullableMalformed, df);
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testReadIllegaState() throws IOException{
         URL url = this.getClass().getResource(csv1);
@@ -194,7 +235,7 @@ public class CSVReaderTest {
         csv.read();
         csv.read();
     }
-    
+
     @Test(expected = IllegalStateException.class)
     public void testReadIllegaStateAsync() throws IOException{
         URL url = this.getClass().getResource(csv1);
@@ -207,5 +248,4 @@ public class CSVReaderTest {
         csv.readAsync();
         csv.readAsync();
     }
-    
 }

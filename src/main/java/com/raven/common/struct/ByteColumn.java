@@ -21,13 +21,13 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Column holding byte values.<br>
+ * A Column holding byte values.<br>
  * This implementation <b>DOES NOT</b> support null values.
  * 
  * @see NullableByteColumn
  *
  */
-public class ByteColumn extends Column {
+public final class ByteColumn extends Column {
 
     /**
      * The unique type code of all <code>ByteColumns</code>
@@ -40,7 +40,17 @@ public class ByteColumn extends Column {
      * Constructs an empty <code>ByteColumn</code>.
      */
     public ByteColumn(){
-        this.entries = new byte[0];
+        this(0);
+    }
+
+    /**
+     * Constructs a <code>ByteColumn</code> with the specified length.<br>
+     * All column entries are set to default byte values
+     * 
+     * @param length The initial length of the column to construct
+     */
+    public ByteColumn(final int length){
+        this.entries = new byte[length];
     }
 
     /**
@@ -50,6 +60,22 @@ public class ByteColumn extends Column {
      */
     public ByteColumn(final String name){
         this();
+        if((name == null) || (name.isEmpty())){
+            throw new IllegalArgumentException("Column name must not be null or empty");
+        }
+        this.name = name;
+    }
+
+    /**
+     * Constructs a <code>ByteColumn</code> with the specified label
+     * and the specified length.<br>
+     * All column entries are set to default byte values
+     * 
+     * @param name The name of the column to construct. Must not be null or empty
+     * @param length The initial length of the column to construct
+     */
+    public ByteColumn(final String name, final int length){
+        this(length);
         if((name == null) || (name.isEmpty())){
             throw new IllegalArgumentException("Column name must not be null or empty");
         }
@@ -143,7 +169,9 @@ public class ByteColumn extends Column {
         for(int i=0; i<entries.length; ++i){
             clone[i] = entries[i];
         }
-        return new ByteColumn(clone);
+        return ((name != null) && !name.isEmpty())
+                ? new ByteColumn(name, clone)
+                : new ByteColumn(clone);
     }
 
     @Override
@@ -174,18 +202,28 @@ public class ByteColumn extends Column {
     }
 
     @Override
-    public Object getValueAt(int index){
+    public Object getValue(int index){
         return entries[index];
     }
 
     @Override
-    public void setValueAt(int index, Object value){
+    public void setValue(int index, Object value){
         entries[index] = (Byte)value;
     }
 
     @Override
     public byte typeCode(){
         return TYPE_CODE;
+    }
+
+    @Override
+    public String typeName(){
+        return "byte";
+    }
+
+    @Override
+    public int capacity(){
+        return entries.length;
     }
 
     @Override
@@ -199,8 +237,160 @@ public class ByteColumn extends Column {
     }
 
     @Override
-    protected int capacity(){
+    public Object getDefaultValue(){
+        return (byte)0;
+    }
+
+    @Override
+    public int memoryUsage(){
         return entries.length;
+    }
+
+    @Override
+    public Column convertTo(byte typeCode){
+        Column converted = null;
+        switch(typeCode){
+        case ByteColumn.TYPE_CODE:
+            converted = this.clone();
+            break;
+        case ShortColumn.TYPE_CODE:
+            final short[] shorts = new short[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                shorts[i] = (short) entries[i];
+            }
+            converted = new ShortColumn(shorts);
+            break;
+        case IntColumn.TYPE_CODE:
+            final int[] ints = new int[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                ints[i] = (int) entries[i];
+            }
+            converted = new IntColumn(ints);
+            break;
+        case LongColumn.TYPE_CODE:
+            final long[] longs = new long[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                longs[i] = (long) entries[i];
+            }
+            converted = new LongColumn(longs);
+            break;
+        case StringColumn.TYPE_CODE:
+            final String[] strings = new String[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                strings[i] = String.valueOf(entries[i]);
+            }
+            converted = new StringColumn(strings);
+            break;
+        case FloatColumn.TYPE_CODE:
+            final float[] floats = new float[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                floats[i] = (float) entries[i];
+            }
+            converted = new FloatColumn(floats);
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final double[] doubles = new double[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                doubles[i] = (double) entries[i];
+            }
+            converted = new DoubleColumn(doubles);
+            break;
+        case CharColumn.TYPE_CODE:
+            final char[] chars = new char[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                chars[i] = String.valueOf(entries[i]).charAt(0);
+            }
+            converted = new CharColumn(chars);
+            break;
+        case BooleanColumn.TYPE_CODE:
+            final boolean[] bools = new boolean[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                bools[i] = entries[i] != 0;
+            }
+            converted = new BooleanColumn(bools);
+            break;
+        case BinaryColumn.TYPE_CODE:
+            final byte[][] bins = new byte[entries.length][];
+            for(int i=0; i<entries.length; ++i){
+                bins[i] = new byte[]{entries[i]};
+            }
+            converted = new BinaryColumn(bins);
+            break;
+        case NullableByteColumn.TYPE_CODE:
+            final Byte[] bytesn = new Byte[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                bytesn[i] = entries[i];
+            }
+            converted = new NullableByteColumn(bytesn);
+            break;
+        case NullableShortColumn.TYPE_CODE:
+            final Short[] shortsn = new Short[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                shortsn[i] = (short) entries[i];
+            }
+            converted = new NullableShortColumn(shortsn);
+            break;
+        case NullableIntColumn.TYPE_CODE:
+            final Integer[] intsn = new Integer[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                intsn[i] = (int) entries[i];
+            }
+            converted = new NullableIntColumn(intsn);
+            break;
+        case NullableLongColumn.TYPE_CODE:
+            final Long[] longsn = new Long[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                longsn[i] = (long) entries[i];
+            }
+            converted = new NullableLongColumn(longsn);
+            break;
+        case NullableStringColumn.TYPE_CODE:
+            final String[] stringsn = new String[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                stringsn[i] = String.valueOf(entries[i]);
+            }
+            converted = new NullableStringColumn(stringsn);
+            break;
+        case NullableFloatColumn.TYPE_CODE:
+            final Float[] floatsn = new Float[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                floatsn[i] = (float) entries[i];
+            }
+            converted = new NullableFloatColumn(floatsn);
+            break;
+        case NullableDoubleColumn.TYPE_CODE:
+            final Double[] doublesn = new Double[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                doublesn[i] = (double) entries[i];
+            }
+            converted = new NullableDoubleColumn(doublesn);
+            break;
+        case NullableCharColumn.TYPE_CODE:
+            final Character[] charsn = new Character[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                charsn[i] = String.valueOf(entries[i]).charAt(0);
+            }
+            converted = new NullableCharColumn(charsn);
+            break;
+        case NullableBooleanColumn.TYPE_CODE:
+            final boolean[] boolsn = new boolean[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                boolsn[i] = entries[i] != 0;
+            }
+            converted = new NullableBooleanColumn(boolsn);
+            break;
+        case NullableBinaryColumn.TYPE_CODE:
+            final byte[][] binsn = new byte[entries.length][];
+            for(int i=0; i<entries.length; ++i){
+                binsn[i] = new byte[]{entries[i]};
+            }
+            converted = new NullableBinaryColumn(binsn);
+            break;
+        default:
+            throw new DataFrameException("Unknown column type code: " + typeCode);
+        }
+        converted.name = this.name;
+        return converted;
     }
 
     @Override

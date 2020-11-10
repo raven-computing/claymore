@@ -28,7 +28,8 @@ import java.util.Iterator;
  */
 public class ColumnIterator implements Iterator<Column> {
 
-    private DataFrame df;
+    private final Column[] columns;
+    private final int nColumns;
     private int ptr = 0;
 
     /**
@@ -37,16 +38,20 @@ public class ColumnIterator implements Iterator<Column> {
      * @param df The DataFrame to construct an iterator from
      */
     protected ColumnIterator(final DataFrame df){
-        this.df = df;
+        this.nColumns = df.columns();
+        this.columns = new Column[nColumns];
+        for(int i=0; i<nColumns; ++i){
+            this.columns[i] = df.getColumn(i);
+        }
     }
 
     @Override
-    public boolean hasNext() {
-        return (ptr != df.columns());
+    public boolean hasNext(){
+        return (ptr != nColumns);
     }
 
     @Override
     public Column next(){
-        return df.getColumnAt(ptr++);
+        return this.columns[ptr++];
     }
 }

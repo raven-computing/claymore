@@ -86,7 +86,6 @@ import java.util.Set;
 public class ArgumentParser {
 
     private Container container;
-
     private boolean helpTriggered;
     private boolean versionTriggered;
 

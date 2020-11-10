@@ -1,3 +1,9 @@
+#### 4.0.0
+* Changed DataFrame API and implementations to strictly adhere to official specification
+* Improved reading of CSV files with malformed formats
+* Fixed a bug in reading of large DataFrame files
+* Removed DataFrame serialization support for the legacy text-based version 1 format
+
 #### 3.0.1
 * Added BitVector implementation
 * Added ProbabilisticSet interface and implementing BloomFilter classes 

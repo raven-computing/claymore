@@ -126,5 +126,4 @@ public class PropertiesFile implements Cloneable {
     protected void setFile(final File file){
         this.file = file;
     }
-
 }

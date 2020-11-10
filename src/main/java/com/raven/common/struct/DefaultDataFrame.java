@@ -17,7 +17,9 @@
 package com.raven.common.struct;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -27,14 +29,14 @@ import java.util.regex.Pattern;
  * DataFrame implementation using primitives (uncluding Strings) as the underlying 
  * data structure.<br>This implementation <b>DOES NOT</b> permit null values.
  * 
- * <p>As described in the {@link DataFrame} interface, most methods of this class can
- * throw a {@link DataFrameException} at runtime if any argument passed to it is invalid,
- * for example an out of bounds index, or if that operation would result in an 
- * incoherent/invalid state of that DataFrame.
+ * <p>As described in the {@link DataFrame} interface, most methods of this
+ * class can throw a {@link DataFrameException} at runtime if any argument passed
+ * to it is invalid, for example an out of bounds index, or if that operation
+ * would result in an incoherent/invalid state of that DataFrame.
  * 
- * <p>Strings are specially treated in this implementation. Since null values are not 
- * permitted, any attempts to add or insert null or empty strings will convert that value
- * to a '<code>n/a</code>' string before inserting. 
+ * <p>Strings are specially treated in this implementation. Since null values
+ * are not permitted, any attempts to add or insert null or empty strings will
+ * convert that value to a "<code>n/a</code>" string before inserting. 
  * 
  * <p>A DefaultDataFrame is {@link Cloneable}, {@link Iterable}
  * 
@@ -45,11 +47,7 @@ import java.util.regex.Pattern;
  * @since 1.0.0
  *
  */
-public class DefaultDataFrame implements DataFrame {
-
-    private Column[] columns;
-    private Map<String, Integer> names;
-    private int next;
+public final class DefaultDataFrame extends AbstractDataFrame implements DataFrame {
 
     /**
      * Constructs an empty <code>DefaultDataFrame</code> without any columns set.
@@ -62,11 +60,14 @@ public class DefaultDataFrame implements DataFrame {
      * Constructs a new <code>DefaultDataFrame</code> with the specified columns.
      * 
      * <p>If a column was labeled during its construction, that column will be 
-     * referenceable by that name. All columns which have not been labeled during their
-     * construction will have no name assigned to them.<br>
-     * The order of the columns within the constructed DataFrame is defined by the order
-     * of the arguments passed to this constructor. All columns must have the same size.
-     * <p>This implementation cannot use {@link Column} instances which permit null values
+     * referenceable by that name. All columns which have not been labeled during
+     * their construction will have no name assigned to them.<br>
+     * The order of the columns within the constructed DataFrame is defined by
+     * the order of the arguments passed to this constructor. All columns must
+     * have the same size.
+     * 
+     * <p>This implementation cannot use {@link Column} instances which
+     * permit null values
      * 
      * @param columns The Column instances comprising the constructed DataFrame 
      */
@@ -75,25 +76,26 @@ public class DefaultDataFrame implements DataFrame {
     }
 
     /**
-     * Constructs a new <code>DefaultDataFrame</code> with the specified columns and
-     * assigns them the specified names. The number of columns must be equal to the
-     * number of names.
+     * Constructs a new <code>DefaultDataFrame</code> with the specified columns
+     * and assigns them the specified names. The number of columns must be equal
+     * to the number of names.
      * 
      * <p>If a column was labeled during its construction, that label is overridden
      * by the corresponding label of the <i>names</i> argument.
-     * The order of the columns within the constructed DataFrame is defined by the order
-     * of the arguments passed to this constructor. The index of the name in the array
-     * determines to which column that name will be assigned to.<br>All columns must have
-     * the same size.
+     * The order of the columns within the constructed DataFrame is defined
+     * by the order of the arguments passed to this constructor. The index of the
+     * name in the array determines to which column that name will be assigned to.<br>
+     * All columns must have the same size.
      * 
-     * <p>This implementation cannot use {@link Column} instances which permit null values
+     * <p>This implementation cannot use {@link Column} instances which
+     * permit null values
      * 
      * @param names The names of all columns
      * @param columns The Column instances comprising the constructed DataFrame 
      */
     public DefaultDataFrame(final String[] names, final Column... columns){
         if(names.length != columns.length){
-            throw new DataFrameException("Args must have equal length");
+            throw new DataFrameException("Arguments must have equal length");
         }
         //override any set names with the provided argument strings
         for(int i=0; i<columns.length; ++i){
@@ -103,26 +105,32 @@ public class DefaultDataFrame implements DataFrame {
     }
 
     /**
-     * Constructs a new empty <code>DefaultDataFrame</code> from the annotated fields in 
-     * the specified class.
+     * Constructs a new empty <code>DefaultDataFrame</code> from the annotated
+     * members in the specified class.
      * 
-     * <p>The provided class must implement the {@link Row} interface. The type of each field 
-     * annotated with {@link RowItem} will be used to determine the type of the column for
-     * that row item. If the annotation does not specify a column name, then the identifying
-     * name of the field will be used as the name for that column.<br>
-     * Fields not carrying the <code>RowItem</code> annotation are ignored when creating the
-     * column structure.<br>
-     * Please note that the order of the constructed columns within the returned DataFrame is
-     * not necessarily the order in which the fields in the provided class are declared
+     * <p>The provided class must implement the {@link Row} interface. The type
+     * of each member annotated with {@link RowItem} will be used to determine
+     * the type of the column for that row item. If the annotation does not specify
+     * a column name, then the identifying name of the member will be used as the
+     * name for that column.<br>
+     * Members not carrying the <code>RowItem</code> annotation are ignored
+     * when creating the column structure.<br>
+     * Please note that the order of the constructed columns within the
+     * returned DataFrame is not necessarily the order in which the members in
+     * the provided class are declared
      * 
-     * @param structure The class defining a row in the DefaultDataFrame to be constructed, 
-     *                  which is used to infer the column structure.
-     *                  Must implement <code>Row</code>
+     * @param structure The class defining a row in the DefaultDataFrame to
+     *                  be constructed, which is used to infer the
+     *                  column structure. Must implement <code>Row</code>.
+     *                  Must not be null
      */
     public DefaultDataFrame(final Class<? extends Row> structure){
+        if(structure == null){
+            throw new DataFrameException("Row argument must not be null");
+        }
         final Field[] fields = structure.getDeclaredFields();
         if(fields.length == 0){
-            throw new DataFrameException(structure.getSimpleName()
+            throw new DataFrameException(structure.getName()
                     + " class does not declare any fields");
         }
         String[] declaredNames = new String[fields.length];
@@ -141,7 +149,7 @@ public class DefaultDataFrame implements DataFrame {
             }
         }
         if(i == 0){
-            throw new DataFrameException(structure.getSimpleName()
+            throw new DataFrameException(structure.getName()
                     + " class does not declare any annotated fields");
         }
         this.columns = new Column[i];
@@ -159,261 +167,307 @@ public class DefaultDataFrame implements DataFrame {
     @Override
     public Byte getByte(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != ByteColumn.TYPE_CODE){
-            throw new DataFrameException("Is not ByteColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, ByteColumn.TYPE_CODE, columns[col]));
         }
         return ((ByteColumn)columns[col]).get(row);
     }
 
     @Override
-    public Byte getByte(final String colName, final int row){
-        final int col = enforceName(colName);
+    public Byte getByte(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != ByteColumn.TYPE_CODE){
-            throw new DataFrameException("Is not ByteColumn");
+        if(columns[c].typeCode() != ByteColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, ByteColumn.TYPE_CODE, columns[c]));
         }
-        return ((ByteColumn)columns[col]).get(row);
+        return ((ByteColumn)columns[c]).get(row);
     }
 
     @Override
     public Short getShort(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != ShortColumn.TYPE_CODE){
-            throw new DataFrameException("Is not ShortColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, ShortColumn.TYPE_CODE, columns[col]));
         }
         return ((ShortColumn)columns[col]).get(row);
     }
 
     @Override
-    public Short getShort(final String colName, final int row){
-        final int col = enforceName(colName);
+    public Short getShort(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != ShortColumn.TYPE_CODE){
-            throw new DataFrameException("Is not ShortColumn");
+        if(columns[c].typeCode() != ShortColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, ShortColumn.TYPE_CODE, columns[c]));
         }
-        return ((ShortColumn)columns[col]).get(row);
+        return ((ShortColumn)columns[c]).get(row);
     }
 
     @Override
     public Integer getInt(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != IntColumn.TYPE_CODE){
-            throw new DataFrameException("Is not IntColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, IntColumn.TYPE_CODE, columns[col]));
         }
         return ((IntColumn)columns[col]).get(row);
     }
 
     @Override
-    public Integer getInt(final String colName, final int row){
-        final int col = enforceName(colName);
+    public Integer getInt(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != IntColumn.TYPE_CODE){
-            throw new DataFrameException("Is not IntColumn");
+        if(columns[c].typeCode() != IntColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, IntColumn.TYPE_CODE, columns[c]));
         }
-        return ((IntColumn)columns[col]).get(row);
+        return ((IntColumn)columns[c]).get(row);
     }
 
     @Override
     public Long getLong(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != LongColumn.TYPE_CODE){
-            throw new DataFrameException("Is not LongColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, LongColumn.TYPE_CODE, columns[col]));
         }
         return ((LongColumn)columns[col]).get(row);
     }
 
     @Override
-    public Long getLong(final String colName, final int row){
-        final int col = enforceName(colName);
+    public Long getLong(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != LongColumn.TYPE_CODE){
-            throw new DataFrameException("Is not LongColumn");
+        if(columns[c].typeCode() != LongColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, LongColumn.TYPE_CODE, columns[c]));
         }
-        return ((LongColumn)columns[col]).get(row);
+        return ((LongColumn)columns[c]).get(row);
     }
 
     @Override
     public String getString(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != StringColumn.TYPE_CODE){
-            throw new DataFrameException("Is not StringColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, StringColumn.TYPE_CODE, columns[col]));
         }
         return ((StringColumn)columns[col]).get(row);
     }
 
     @Override
-    public String getString(final String colName, final int row){
-        final int col = enforceName(colName);
+    public String getString(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != StringColumn.TYPE_CODE){
-            throw new DataFrameException("Is not StringColumn");
+        if(columns[c].typeCode() != StringColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, StringColumn.TYPE_CODE, columns[c]));
         }
-        return ((StringColumn)columns[col]).get(row);
+        return ((StringColumn)columns[c]).get(row);
     }
 
     @Override
     public Float getFloat(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != FloatColumn.TYPE_CODE){
-            throw new DataFrameException("Is not FloatColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, FloatColumn.TYPE_CODE, columns[col]));
         }
         return ((FloatColumn)columns[col]).get(row);
     }
 
     @Override
-    public Float getFloat(final String colName, final int row){
-        final int col = enforceName(colName);
+    public Float getFloat(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != FloatColumn.TYPE_CODE){
-            throw new DataFrameException("Is not FloatColumn");
+        if(columns[c].typeCode() != FloatColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, FloatColumn.TYPE_CODE, columns[c]));
         }
-        return ((FloatColumn)columns[col]).get(row);
+        return ((FloatColumn)columns[c]).get(row);
     }
 
     @Override
     public Double getDouble(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != DoubleColumn.TYPE_CODE){
-            throw new DataFrameException("Is not DoubleColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, DoubleColumn.TYPE_CODE, columns[col]));
         }
         return ((DoubleColumn)columns[col]).get(row);
     }
 
     @Override
-    public Double getDouble(final String colName, final int row){
-        final int col = enforceName(colName);
+    public Double getDouble(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != DoubleColumn.TYPE_CODE){
-            throw new DataFrameException("Is not DoubleColumn");
+        if(columns[c].typeCode() != DoubleColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, DoubleColumn.TYPE_CODE, columns[c]));
         }
-        return ((DoubleColumn)columns[col]).get(row);
+        return ((DoubleColumn)columns[c]).get(row);
     }
 
     @Override
     public Character getChar(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != CharColumn.TYPE_CODE){
-            throw new DataFrameException("Is not CharColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, CharColumn.TYPE_CODE, columns[col]));
         }
         return ((CharColumn)columns[col]).get(row);
     }
 
     @Override
-    public Character getChar(final String colName, final int row){
-        final int col = enforceName(colName);
+    public Character getChar(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != CharColumn.TYPE_CODE){
-            throw new DataFrameException("Is not CharColumn");
+        if(columns[c].typeCode() != CharColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, CharColumn.TYPE_CODE, columns[c]));
         }
-        return ((CharColumn)columns[col]).get(row);
+        return ((CharColumn)columns[c]).get(row);
     }
 
     @Override
     public Boolean getBoolean(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != BooleanColumn.TYPE_CODE){
-            throw new DataFrameException("Is not BooleanColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, BooleanColumn.TYPE_CODE, columns[col]));
         }
         return ((BooleanColumn)columns[col]).get(row);
     }
 
     @Override
-    public Boolean getBoolean(final String colName, final int row){
-        final int col = enforceName(colName);
+    public Boolean getBoolean(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != BooleanColumn.TYPE_CODE){
-            throw new DataFrameException("Is not BooleanColumn");
+        if(columns[c].typeCode() != BooleanColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, BooleanColumn.TYPE_CODE, columns[c]));
         }
-        return ((BooleanColumn)columns[col]).get(row);
+        return ((BooleanColumn)columns[c]).get(row);
     }
 
     @Override
     public byte[] getBinary(final int col, final int row){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != BinaryColumn.TYPE_CODE){
-            throw new DataFrameException("Is not BinaryColumn");
+            throw new DataFrameException(createInvalidGetMessage(
+                    col, BinaryColumn.TYPE_CODE, columns[col]));
         }
         return ((BinaryColumn)columns[col]).get(row);
     }
 
     @Override
-    public byte[] getBinary(final String colName, final int row){
-        final int col = enforceName(colName);
+    public byte[] getBinary(final String col, final int row){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != BinaryColumn.TYPE_CODE){
-            throw new DataFrameException("Is not BinaryColumn");
+        if(columns[c].typeCode() != BinaryColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidGetMessage(
+                    c, BinaryColumn.TYPE_CODE, columns[c]));
         }
-        return ((BinaryColumn)columns[col]).get(row);
+        return ((BinaryColumn)columns[c]).get(row);
+    }
+
+    @Override
+    public Number getNumber(final int col, final int row){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        if((row < 0) || (row >= next)){
+            throw new DataFrameException("Invalid row index: " + row);
+        }
+        if(!columns[col].isNumeric()){
+            final String msg = (columns[col].name != null)
+                    ? "'" + columns[col].name + "'"
+                    : ("at index " + col);
+
+            throw new DataFrameException(
+                    "Cannot get number from column " + msg
+                    + ". Expected numeric column but found "
+                    + columns[col].getClass().getSimpleName());
+        }
+        return (Number) columns[col].getValue(row);
+    }
+
+    @Override
+    public Number getNumber(final String col, final int row){
+        return getNumber(enforceName(col), row);
     }
 
     @Override
@@ -422,30 +476,32 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != ByteColumn.TYPE_CODE){
-            throw new DataFrameException("Is not ByteColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, ByteColumn.TYPE_CODE, columns[col]));
         }
         ((ByteColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setByte(final String colName, final int row, final Byte value){
+    public void setByte(final String col, final int row, final Byte value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != ByteColumn.TYPE_CODE){
-            throw new DataFrameException("Is not ByteColumn");
+        if(columns[c].typeCode() != ByteColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, ByteColumn.TYPE_CODE, columns[c]));
         }
-        ((ByteColumn)columns[col]).set(row, value);
+        ((ByteColumn)columns[c]).set(row, value);
     }
 
     @Override
@@ -454,30 +510,32 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != ShortColumn.TYPE_CODE){
-            throw new DataFrameException("Is not ShortColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, ShortColumn.TYPE_CODE, columns[col]));
         }
         ((ShortColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setShort(final String colName, final int row, final Short value){
+    public void setShort(final String col, final int row, final Short value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != ShortColumn.TYPE_CODE){
-            throw new DataFrameException("Is not ShortColumn");
+        if(columns[c].typeCode() != ShortColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, ShortColumn.TYPE_CODE, columns[c]));
         }
-        ((ShortColumn)columns[col]).set(row, value);
+        ((ShortColumn)columns[c]).set(row, value);
     }
 
     @Override
@@ -486,30 +544,32 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != IntColumn.TYPE_CODE){
-            throw new DataFrameException("Is not IntColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, IntColumn.TYPE_CODE, columns[col]));
         }
         ((IntColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setInt(final String colName, final int row, final Integer value){
+    public void setInt(final String col, final int row, final Integer value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != IntColumn.TYPE_CODE){
-            throw new DataFrameException("Is not IntColumn");
+        if(columns[c].typeCode() != IntColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, IntColumn.TYPE_CODE, columns[c]));
         }
-        ((IntColumn)columns[col]).set(row, value);
+        ((IntColumn)columns[c]).set(row, value);
     }
 
     @Override
@@ -518,56 +578,60 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != LongColumn.TYPE_CODE){
-            throw new DataFrameException("Is not LongColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, LongColumn.TYPE_CODE, columns[col]));
         }
         ((LongColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setLong(final String colName, final int row, final Long value){
+    public void setLong(final String col, final int row, final Long value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != LongColumn.TYPE_CODE){
-            throw new DataFrameException("Is not LongColumn");
+        if(columns[c].typeCode() != LongColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, LongColumn.TYPE_CODE, columns[c]));
         }
-        ((LongColumn)columns[col]).set(row, value);
+        ((LongColumn)columns[c]).set(row, value);
     }
 
     @Override
     public void setString(final int col, final int row, final String value){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != StringColumn.TYPE_CODE){
-            throw new DataFrameException("Is not StringColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, StringColumn.TYPE_CODE, columns[col]));
         }
         ((StringColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setString(final String colName, final int row, final String value){
-        final int col = enforceName(colName);
+    public void setString(final String col, final int row, final String value){
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != StringColumn.TYPE_CODE){
-            throw new DataFrameException("Is not StringColumn");
+        if(columns[c].typeCode() != StringColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, StringColumn.TYPE_CODE, columns[c]));
         }
-        ((StringColumn)columns[col]).set(row, value);
+        ((StringColumn)columns[c]).set(row, value);
     }
 
     @Override
@@ -576,30 +640,32 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != FloatColumn.TYPE_CODE){
-            throw new DataFrameException("Is not FloatColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, FloatColumn.TYPE_CODE, columns[col]));
         }
         ((FloatColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setFloat(final String colName, final int row, final Float value){
+    public void setFloat(final String col, final int row, final Float value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != FloatColumn.TYPE_CODE){
-            throw new DataFrameException("Is not FloatColumn");
+        if(columns[c].typeCode() != FloatColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, FloatColumn.TYPE_CODE, columns[c]));
         }
-        ((FloatColumn)columns[col]).set(row, value);
+        ((FloatColumn)columns[c]).set(row, value);
     }
 
     @Override
@@ -608,30 +674,32 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != DoubleColumn.TYPE_CODE){
-            throw new DataFrameException("Is not DoubleColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, DoubleColumn.TYPE_CODE, columns[col]));
         }
         ((DoubleColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setDouble(final String colName, final int row, final Double value){
+    public void setDouble(final String col, final int row, final Double value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != DoubleColumn.TYPE_CODE){
-            throw new DataFrameException("Is not DoubleColumn");
+        if(columns[c].typeCode() != DoubleColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, DoubleColumn.TYPE_CODE, columns[c]));
         }
-        ((DoubleColumn)columns[col]).set(row, value);
+        ((DoubleColumn)columns[c]).set(row, value);
     }
 
     @Override
@@ -640,30 +708,40 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
+        }
+        if((value < 32) || (value > 126)){
+            throw new DataFrameException("Invalid character value. "
+                                       + "Only printable ASCII is permitted");
         }
         if(columns[col].typeCode() != CharColumn.TYPE_CODE){
-            throw new DataFrameException("Is not CharColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, CharColumn.TYPE_CODE, columns[col]));
         }
         ((CharColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setChar(final String colName, final int row, final Character value){
+    public void setChar(final String col, final int row, final Character value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != CharColumn.TYPE_CODE){
-            throw new DataFrameException("Is not CharColumn");
+        if((value < 32) || (value > 126)){
+            throw new DataFrameException("Invalid character value. "
+                                       + "Only printable ASCII is permitted");
         }
-        ((CharColumn)columns[col]).set(row, value);
+        if(columns[c].typeCode() != CharColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, CharColumn.TYPE_CODE, columns[c]));
+        }
+        ((CharColumn)columns[c]).set(row, value);
     }
 
     @Override
@@ -672,30 +750,32 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != BooleanColumn.TYPE_CODE){
-            throw new DataFrameException("Is not BooleanColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, BooleanColumn.TYPE_CODE, columns[col]));
         }
         ((BooleanColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setBoolean(final String colName, final int row, final Boolean value){
+    public void setBoolean(final String col, final int row, final Boolean value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != BooleanColumn.TYPE_CODE){
-            throw new DataFrameException("Is not BooleanColumn");
+        if(columns[c].typeCode() != BooleanColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, BooleanColumn.TYPE_CODE, columns[c]));
         }
-        ((BooleanColumn)columns[col]).set(row, value);
+        ((BooleanColumn)columns[c]).set(row, value);
     }
 
     @Override
@@ -704,306 +784,93 @@ public class DefaultDataFrame implements DataFrame {
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
         if(columns[col].typeCode() != BinaryColumn.TYPE_CODE){
-            throw new DataFrameException("Is not BinaryColumn");
+            throw new DataFrameException(createInvalidSetMessage(
+                    col, BinaryColumn.TYPE_CODE, columns[col]));
         }
         ((BinaryColumn)columns[col]).set(row, value);
     }
 
     @Override
-    public void setBinary(final String colName, final int row, final byte[] value){
+    public void setBinary(final String col, final int row, final byte[] value){
         if(value == null){
             throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        final int col = enforceName(colName);
+        final int c = enforceName(col);
         if((row < 0) || (row >= next)){
-            throw new DataFrameException("Invalid row index: "+row);
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        if(columns[col].typeCode() != BinaryColumn.TYPE_CODE){
-            throw new DataFrameException("Is not BinaryColumn");
+        if(columns[c].typeCode() != BinaryColumn.TYPE_CODE){
+            throw new DataFrameException(createInvalidSetMessage(
+                    c, BinaryColumn.TYPE_CODE, columns[c]));
         }
-        ((BinaryColumn)columns[col]).set(row, value);
+        ((BinaryColumn)columns[c]).set(row, value);
     }
 
     @Override
-    public String[] getColumnNames(){
-        if(names != null){
-            final String[] names = new String[columns.length];
-            for(int i=0; i<columns.length; ++i){
-                final String s = this.columns[i].name;
-                names[i] = ((s == null) ? String.valueOf(i) : s);
-            }
-            return names;
+    public void setNumber(final int col, final int row, final Number value){
+        if(value == null){
+            throw new DataFrameException("DefaultDataFrame cannot use null values");
         }
-        return null;
-    }
-
-    @Override
-    public String getColumnName(final int col){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
-        if(names != null){
-            return this.columns[col].name;
+        if((row < 0) || (row >= next)){
+            throw new DataFrameException("Invalid row index: " + row);
         }
-        return null;
-    }
+        if(!columns[col].isNumeric()){
+            final String msg = (columns[col].name != null)
+                    ? "'" + columns[col].name + "'"
+                    : ("at index " + col);
 
-    @Override
-    public int getColumnIndex(final String colName){
-        return enforceName(colName);
-    }
-
-    @Override
-    public void setColumnNames(String... names){
-        if((names == null) || (names.length == 0)){
-            throw new DataFrameException("Arg must not be null or empty");
+            throw new DataFrameException(
+                   "Cannot set number in column " + msg
+                 + ". Expected numeric column but found "
+                 + columns[col].getClass().getSimpleName());
         }
-        if((next == -1) || (names.length != columns.length)){
-            throw new DataFrameException("Length does not match number of columns: "
-                    +names.length);
-        }
-        this.names = new HashMap<String, Integer>(16);
-        for(int i=0; i<names.length; ++i){
-            if((names[i] == null) || (names[i].isEmpty())){
-                throw new DataFrameException("Column name must not be null or empty");
-            }
-            this.names.put(names[i], i);
-            this.columns[i].name = names[i];
-        }
-    }
-
-    @Override
-    public boolean setColumnName(final int col, final String name){
-        if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
-        }
-        if((name == null) || (name.isEmpty())){
-            throw new DataFrameException("Column name must not be null or empty");
-        }
-        if(names == null){
-            this.names = new HashMap<String, Integer>(16);
-        }
-        boolean overridden = false;
-        final String current = this.columns[col].name;
-        Integer index = null;
-        if(current != null){
-            index = this.names.get(current);	
-        }
-        if((index != null) && (index == col)){
-            this.names.remove(current);
-            overridden = true;
-        }
-        this.names.put(name, col);
-        this.columns[col].name = name;
-        return overridden;
-    }
-
-    @Override
-    public void removeColumnNames(){
-        this.names = null;
-        for(int i=0; i<columns.length; ++i){
-            this.columns[i].name = null;
+        switch(columns[col].typeCode()){
+        case ByteColumn.TYPE_CODE:
+            ((ByteColumn)columns[col]).set(row, value.byteValue());
+            break;
+        case ShortColumn.TYPE_CODE:
+            ((ShortColumn)columns[col]).set(row, value.shortValue());
+            break;
+        case IntColumn.TYPE_CODE:
+            ((IntColumn)columns[col]).set(row, value.intValue());
+            break;
+        case LongColumn.TYPE_CODE:
+            ((LongColumn)columns[col]).set(row, value.longValue());
+            break;
+        case FloatColumn.TYPE_CODE:
+            ((FloatColumn)columns[col]).set(row, value.floatValue());
+            break;
+        case DoubleColumn.TYPE_CODE:
+            ((DoubleColumn)columns[col]).set(row, value.doubleValue());
+            break;
         }
     }
 
     @Override
-    public boolean hasColumnNames(){
-        return (this.names != null);
+    public void setNumber(final String col, final int row, final Number value){
+        setNumber(enforceName(col), row, value);
     }
 
     @Override
-    public Object[] getRowAt(final int index){
-        if((index >= next) || (index < 0)){
-            throw new DataFrameException("Invalid row index: "+index);
-        }
-        Object[] row = new Object[columns.length];
-        for(int i=0; i<columns.length; ++i){
-            row[i] = columns[i].getValueAt(index);
-        }
-        return row;
-    }
-
-    @Override
-    public <T extends Row> T getRowAt(final int index, final Class<T> classOfT){
-        if(!hasColumnNames()){
-            throw new DataFrameException("Columns must be labeled in order "
-                    + "to use row annotation features");
-            
-        }
-        if((index >= next) || (index < 0)){
-            throw new DataFrameException("Invalid row index: "+index);
-        }
-        T row = null;
-        try{
-            row = classOfT.newInstance();
-            for(final Field field : classOfT.getDeclaredFields()){
-                final RowItem item = field.getAnnotation(RowItem.class);
-                if(item != null){
-                    String name = item.value();
-                    if((name == null || name.isEmpty())){
-                        name = field.getName();
-                    }
-                    final int i = enforceName(name);
-                    field.setAccessible(true);
-                    field.set(row, columns[i].getValueAt(index));
-                }
-            }
-        }catch(InstantiationException ex){
-            throw new DataFrameException(classOfT.getSimpleName() 
-                    + " does not declare a default no-args constructor");
-            
-        }catch(IllegalAccessException ex){
-            throw new DataFrameException(ex.getMessage(), ex);
-        }catch(SecurityException ex){
-            throw new DataFrameException("Access to field denied", ex);
-        }
-        return row;
-    }
-
-    @Override
-    public void setRowAt(final int index, final Object... row){
-        if((index >= next) || (index < 0)){
-            throw new DataFrameException("Invalid row index: "+index);
-        }
-        enforceTypes(row);
-        for(int i=0; i<columns.length; ++i){
-            columns[i].setValueAt(index, row[i]);
-        }
-    }
-
-    @Override
-    public void setRowAt(final int index, final Row row){
-        if(!hasColumnNames()){
-            throw new DataFrameException("Columns must be labeled in order "
-                    + "to use row annotation feature");
-            
-        }
-        if((index >= next) || (index < 0)){
-            throw new DataFrameException("Invalid row index: "+index);
-        }
-        final Object[] items = itemsByAnnotations(row);
-        for(int i=0; i<items.length; ++i){
-            columns[i].setValueAt(index, items[i]);
-        }
-    }
-
-    @Override
-    public void addRow(final Object... row){
-        enforceTypes(row);
-        if(next >= columns[0].capacity()){
-            resize();
-        }
-        for(int i=0; i<columns.length; ++i){
-            columns[i].setValueAt(next, row[i]);
-        }
-        ++next;
-    }
-
-    @Override
-    public void addRow(final Row row){
-        if(!hasColumnNames()){
-            throw new DataFrameException("Columns must be labeled in order "
-                    + "to use row annotation feature");
-            
-        }
-        if(next >= columns[0].capacity()){
-            resize();
-        }
-        final Object[] items = itemsByAnnotations(row);
-        for(int i=0; i<items.length; ++i){
-            columns[i].setValueAt(next, items[i]);
-        }
-        ++next;
-    }
-
-    @Override
-    public void insertRowAt(final int index, final Object... row){
-        if((index > next) || (index < 0)){
-            throw new DataFrameException("Invalid row index: "+index);
-        }
-        if(index == next){
-            addRow(row);
-            return;
-        }
-        enforceTypes(row);
-        if(next >= columns[0].capacity()){
-            resize();
-        }
-        for(int i=0; i<columns.length; ++i){
-            columns[i].insertValueAt(index, next, row[i]);
-        }
-        ++next;
-    }
-
-    @Override
-    public void insertRowAt(final int index, final Row row){
-        if(!hasColumnNames()){
-            throw new DataFrameException("Columns must be labeled in order "
-                    + "to use row annotation feature");
-            
-        }
-        if((index > next) || (index < 0)){
-            throw new DataFrameException("Invalid row index: "+index);
-        }
-        if(index == next){
-            addRow(row);
-            return;
-        }
-        final Object[] items = itemsByAnnotations(row);
-        if(next >= columns[0].capacity()){
-            resize();
-        }
-        for(int i=0; i<items.length; ++i){
-            columns[i].insertValueAt(index, next, items[i]);
-        }
-        ++next;
-    }
-
-    @Override
-    public void removeRow(final int index){
-        if((index >= next) || (index < 0)){
-            throw new DataFrameException("Invalid row index: "+index);
-        }
-        for(final Column col : columns){
-            col.remove(index, index+1, next);
-        }
-        --next;
-        if((next*3) < columns[0].capacity()){
-            flushAll(4);
-        }
-    }
-
-    @Override
-    public void removeRows(final int from, final int to){
-        if(from >= to){
-            throw new DataFrameException("'to' must be greater than 'from'");
-        }
-        if((from < 0) || (to < 0) || (from >= next) || (to > next)){
-            throw new DataFrameException("Invalid row index: "
-                    +((from < 0) || (from >= next) ? from : to));
-        }
-        for(final Column col : columns){
-            col.remove(from, to, next);
-        }
-        next-=(to-from);
-        if((next*3) < columns[0].capacity()){
-            flushAll(4);
-        }
-    }
-
-    @Override
-    public void addColumn(final Column col){
+    public DataFrame addColumn(Column col){
         if(col == null){
-            throw new DataFrameException("Arg must not be null");
+            throw new DataFrameException("Column argument must not be null");
         }
         if(col.isNullable()){
-            throw new DataFrameException("DefaultDataFrame cannot use NullableColumn instance");
+            throw new DataFrameException(
+                    "DefaultDataFrame cannot use NullableColumn instance");
+        }
+        if((col.capacity() == 0) && (next > 0)){
+            col = Column.like(col, next);
         }
         if(next == -1){
             this.columns = new Column[1];
@@ -1015,7 +882,8 @@ public class DefaultDataFrame implements DataFrame {
             }
         }else{
             if(col.capacity() != next){
-                throw new DataFrameException("Invalid column length. Must be of length "+next);
+                throw new DataFrameException(
+                        "Invalid column length. Must be of length " + next);
             }
             col.matchLength(capacity());
             final Column[] tmp = new Column[columns.length+1];
@@ -1031,15 +899,21 @@ public class DefaultDataFrame implements DataFrame {
             }
             this.columns = tmp;
         }
+        return this;
     }
 
     @Override
-    public void addColumn(final String colName, final Column col){
+    public DataFrame addColumn(final String colName, Column col){
         if((colName == null) || (colName.isEmpty()) || (col == null)){
-            throw new DataFrameException("Arg must not be null or empty");
+            throw new DataFrameException(
+                    "Column argument must not be null or empty");
         }
         if(col.isNullable()){
-            throw new DataFrameException("DefaultDataFrame cannot use NullableColumn instance");
+            throw new DataFrameException(
+                    "DefaultDataFrame cannot use NullableColumn instance");
+        }
+        if((col.capacity() == 0) && (next > 0)){
+            col = Column.like(col, next);
         }
         if(next == -1){
             this.columns = new Column[1];
@@ -1050,7 +924,8 @@ public class DefaultDataFrame implements DataFrame {
             col.name = colName;
         }else{
             if(col.capacity() != next){
-                throw new DataFrameException("Invalid column length. Must be of length "+next);
+                throw new DataFrameException(
+                        "Invalid column length. Must be of length " + next);
             }
             col.matchLength(capacity());
             final Column[] tmp = new Column[columns.length+1];
@@ -1065,52 +940,25 @@ public class DefaultDataFrame implements DataFrame {
             this.names.put(colName, columns.length-1);
             col.name = colName;
         }
+        return this;
     }
 
     @Override
-    public void removeColumn(final int col){
-        if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
-        }
-        final Column[] tmp = new Column[columns.length-1];
-        int idx = 0;
-        for(int i=0; i<columns.length; ++i){
-            if(i != col){
-                tmp[idx++] = columns[i];
-            }
-        }
-        if(names != null){
-            final String name = this.columns[col].name;
-            if(name != null){
-                this.names.remove(name);
-            }
-            Iterator<Map.Entry<String, Integer>> iter = names.entrySet().iterator();
-            while(iter.hasNext()){
-                final Map.Entry<String, Integer> entry = iter.next();
-                if(entry.getValue()>=col){
-                    entry.setValue(entry.getValue()-1);
-                }
-            }
-        }
-        this.columns = tmp;
-    }
-
-    @Override
-    public void removeColumn(final String colName){
-        removeColumn(enforceName(colName));
-    }
-
-    @Override
-    public void insertColumnAt(final int index, final Column col){
+    public DataFrame insertColumn(final int index, Column col){
         if(col == null){
-            throw new DataFrameException("Arg must not be null");
+            throw new DataFrameException(
+                    "Column argument must not be null");
         }
         if(col.isNullable()){
-            throw new DataFrameException("DefaultDataFrame cannot use NullableColumn instance");
+            throw new DataFrameException(
+                    "DefaultDataFrame cannot use NullableColumn instance");
+        }
+        if((col.capacity() == 0) && (next > 0)){
+            col = Column.like(col, next);
         }
         if(next == -1){
             if(index != 0){
-                throw new DataFrameException("Invalid column index: "+index);
+                throw new DataFrameException("Invalid column index: " + index);
             }
             this.columns = new Column[1];
             this.columns[0] = col;
@@ -1121,10 +969,11 @@ public class DefaultDataFrame implements DataFrame {
             }
         }else{
             if((index < 0) || (index > columns.length)){
-                throw new DataFrameException("Invalid column index: "+index);
+                throw new DataFrameException("Invalid column index: " + index);
             }
             if(col.capacity() != next){
-                throw new DataFrameException("Invalid column length. Must be of length "+next);
+                throw new DataFrameException(
+                        "Invalid column length. Must be of length " + next);
             }
             col.matchLength(capacity());
             final Column[] tmp = new Column[columns.length+1];
@@ -1152,35 +1001,7 @@ public class DefaultDataFrame implements DataFrame {
                 this.names.put(col.name, index);
             }
         }
-    }
-
-    @Override
-    public void insertColumnAt(final int index, final String colName, final Column col){
-        if((col == null) || (colName == null) || (colName.isEmpty())){
-            throw new DataFrameException("Arg must not be null or empty");
-        }
-        col.name = colName;
-        insertColumnAt(index, col);
-    }
-
-    @Override
-    public int columns(){
-        return (columns != null ? columns.length : 0);
-    }
-
-    @Override
-    public int capacity(){
-        return (columns != null ? columns[0].capacity() : 0);
-    }
-
-    @Override
-    public int rows(){
-        return (columns != null ? next : 0);
-    }
-
-    @Override
-    public boolean isEmpty(){
-        return (next <= 0);
+        return this;
     }
 
     @Override
@@ -1189,47 +1010,23 @@ public class DefaultDataFrame implements DataFrame {
     }
 
     @Override
-    public void clear(){
-        for(final Column col : columns){
-            col.remove(0, next, next);
-        }
-        this.next = 0;
-        flushAll(2);
-    }
-
-    @Override
-    public void flush(){
-        if((next != -1) && (next != columns[0].capacity())){
-            flushAll(0);
-        }
-    }
-
-    @Override
-    public Column getColumnAt(final int col){
-        if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
-        }
-        return columns[col];
-    }
-
-    @Override
-    public Column getColumn(final String colName){
-        return getColumnAt(enforceName(colName));
-    }
-
-    @Override
-    public void setColumnAt(final int index, final Column col){
+    public DataFrame setColumn(final int index, Column col){
         if(col == null){
-            throw new DataFrameException("Arg must not be null");
+            throw new DataFrameException("Column argument must not be null");
         }
         if(col.isNullable()){
-            throw new DataFrameException("DefaultDataFrame cannot use NullableColumn instance");
+            throw new DataFrameException(
+                    "DefaultDataFrame cannot use NullableColumn instance");
         }
         if((next == -1) || (index < 0) || (index >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+index);
+            throw new DataFrameException("Invalid column index: " + index);
+        }
+        if((col.capacity() == 0) && (next > 0)){
+            col = Column.like(col, next);
         }
         if(col.capacity() != next){
-            throw new DataFrameException("Invalid column length. Must be of length "+next);
+            throw new DataFrameException(
+                    "Invalid column length. Must be of length " + next);
         }
         col.matchLength(capacity());
         final String oldName = columns[index].name;
@@ -1245,168 +1042,554 @@ public class DefaultDataFrame implements DataFrame {
         }else{
             col.name = oldName;
         }
+        return this;
     }
 
     @Override
-    public int indexOf(final int col, final String regex){
-        if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+    public DataFrame setColumn(final String colName, Column col){
+        if((colName == null) || (colName.isEmpty())){
+            throw new DataFrameException("Column name must not be null or empty");
         }
-        if(regex == null){
-            throw new DataFrameException("Arg must not be null");
+        if(next == -1){
+            return addColumn(colName, col);
         }
-        final Column c = columns[col];
-        final Pattern p = Pattern.compile(regex);//cache
-        for(int i=0; i<next; ++i){
-            if(p.matcher(String.valueOf(c.getValueAt(i))).matches()){
-                return i;
+        if(col == null){
+            throw new DataFrameException("Column argument must not be null");
+        }
+        if(col.isNullable()){
+            throw new DataFrameException(
+                    "DefaultDataFrame cannot use NullableColumn instance");
+
+        }
+        if((col.capacity() == 0) && (next > 0)){
+            col = Column.like(col, next);
+        }
+        if(names == null){
+            this.names = new HashMap<String, Integer>(16);
+        }
+        final Integer i = names.get(colName);
+        if(i != null){//replace
+            if(col.capacity() != next){
+                throw new DataFrameException(
+                        "Invalid column length. Must be of length " + next);
             }
+            col.matchLength(capacity());
+            this.columns[i] = col;
+            col.name = colName;
+        }else{//add
+            addColumn(colName, col);
         }
-        return -1;
+        return this;
     }
 
     @Override
-    public int indexOf(final String colName, final String regex){
-        return indexOf(enforceName(colName), regex);
-    }
-
-    @Override
-    public int indexOf(final int col, final int startFrom, final String regex){
+    public DataFrame convert(final int col, final byte typeCode){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
-        if(regex == null){
-            throw new DataFrameException("Arg must not be null");
+        Column c = columns[col];
+        if(c.typeCode() == typeCode){
+            return this;
         }
-        if((startFrom < 0) || (startFrom >= next)){
-            throw new DataFrameException("Invalid start argument: "+startFrom);
+        this.flush();
+        try{
+            c = c.convertTo(typeCode);
+        }catch(NumberFormatException ex){
+            throw new DataFrameException(
+                    "Cannot convert column. Invalid number format", ex);
         }
-        final Column c = columns[col];
-        final Pattern p = Pattern.compile(regex);//cache
-        for(int i=startFrom; i<next; ++i){
-            if(p.matcher(String.valueOf(c.getValueAt(i))).matches()){
-                return i;
-            }
+        if(c.isNullable()){
+            throw new DataFrameException(
+                    "DefaultDataFrame cannot use NullableColumn instance");
         }
-        return -1;
+        columns[col] = c;
+        return this;
     }
 
     @Override
-    public int indexOf(final String colName, final int startFrom, final String regex){
-        return indexOf(enforceName(colName), startFrom, regex);
+    public DataFrame convert(final String col, final byte typeCode){
+        return convert(enforceName(col), typeCode);
     }
 
     @Override
-    public int[] indexOfAll(final int col, final String regex){
-        if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+    public int replace(final DataFrame df){
+        if(df == null){
+            return 0;//NO-OP
         }
-        if((regex == null) || (regex.isEmpty())){
-            throw new DataFrameException("Arg must not be null or empty");
+        if(df.isNullable()){
+            throw new DataFrameException(
+                    "DefaultDataFrame cannot use NullableColumn instances");
+
         }
-        final Column c = columns[col];
-        final Pattern p = Pattern.compile(regex);//cache
-        int[] res = new int[16];
-        int hits = 0;
-        for(int i=0; i<next; ++i){
-            if(p.matcher(String.valueOf(c.getValueAt(i))).matches()){
-                if(hits>=res.length){//resize
-                    final int[] tmp = new int[res.length*2];
-                    for(int j=0; j<hits; ++j){
-                        tmp[j] = res[j];
-                    }
-                    res = tmp;
+        if(df.rows() != next){
+            throw new DataFrameException(
+                    String.format("Row count differs. Expected %s rows but found %s",
+                                   next, df.rows()));
+
+        }
+        if(this.hasColumnNames() ^ df.hasColumnNames()){
+            throw new DataFrameException("Cannot replace columns. "
+                    + "DataFrames must both be either labeled or unlabeled");
+        }
+        this.flush();
+        df.flush();
+        int replaced = 0;
+        if(this.hasColumnNames()){
+            for(int i=0; i<df.columns(); ++i){
+                final Column col = df.getColumn(i);
+                final String name = col.getName();
+                if((name != null) && !name.isEmpty() && hasColumn(name)){
+                   this.setColumn(name, col);
+                   ++replaced;
                 }
-                res[hits++] = i;
+            }
+        }else{
+            for(int i=0; i<df.columns(); ++i){
+                final Column col = df.getColumn(i);
+                if(replaced < this.columns()){
+                    this.setColumn(replaced, col);
+                    ++replaced;
+                }
             }
         }
-        if(res.length != hits){//trim
-            final int[] tmp = new int[hits];
-            for(int j=0; j<hits; ++j){
-                tmp[j] = res[j];
-            }
-            res = tmp;
-        }
-        return (hits == 0 ? new int[0] : res);
+        return replaced;
     }
 
     @Override
-    public int[] indexOfAll(final String colName, final String regex){
-        return indexOfAll(enforceName(colName), regex);
-    }
-
-    @Override
-    public DataFrame filter(final int col, final String regex){
+    public Map<Object, Integer> factor(final int col){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
-        if((regex == null) || (regex.isEmpty())){
-            throw new DataFrameException("Arg must not be null or empty");
+        final Column c = columns[col];
+        if(c.isNumeric()){
+            return new HashMap<Object, Integer>();
         }
-        final int[] indices = indexOfAll(col, regex);
-        final DataFrame df = new DefaultDataFrame();
-        for(final Column c : columns){
-            df.addColumn(Column.ofType(c.typeCode()));
+        final Map<Object, Integer> map = new HashMap<>();
+        final IntColumn factors = new IntColumn(capacity());
+        factors.name = c.name;
+        int totalFactors = 0;
+        for(int i=0; i<next; ++i){
+            final Integer factor = map.get(c.getValue(i));
+            if(factor != null){
+                factors.set(i, factor);
+            }else{
+                ++totalFactors;
+                map.put(c.getValue(i), totalFactors);
+                factors.set(i, totalFactors);
+            }
         }
-        for(int i=0; i<indices.length; ++i){
-            df.addRow(getRowAt(indices[i]));
+        columns[col] = factors;
+        return map;
+    }
+
+    @Override
+    public Map<Object, Integer> factor(final String col){
+        return factor(enforceName(col));
+    }
+
+    @Override
+    public DataFrame count(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
         }
-        if(names != null){
-            df.setColumnNames(getColumnNames());
+        final Column c = columns[col];
+        final DataFrame df = new DefaultDataFrame(
+                Column.ofType(c.typeCode()),
+                new IntColumn("count"),
+                new FloatColumn("%"));
+        
+        String name = c.name;
+        if((name != null) && !name.isEmpty()){
+            if(name.equals("count") || name.equals("%")){
+                name = name + "_";
+            }
+            df.setColumnName(0, name);
+        }
+        final Map<Object, Integer> map = new HashMap<>();
+        for(int i=0; i<next; ++i){
+            final Object value = c.getValue(i);
+            final Integer count = map.get(value);
+            if(count != null){
+                map.put(value, count + 1);
+            }else{
+                map.put(value, 1);
+            }
+        }
+        for(final Map.Entry<Object, Integer> count : map.entrySet()){
+            df.addRow(count.getKey(),
+                      count.getValue(),
+                      (float)count.getValue() / next);
         }
         return df;
     }
 
     @Override
-    public DataFrame filter(final String colName, final String regex){
-        return filter(enforceName(colName), regex);
+    public DataFrame count(final String col){
+        return count(enforceName(col));
+    }
+
+    @Override
+    public int countUnique(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        final Column c = columns[col];
+        final Set<Object> unique = new HashSet<>();
+        for(int i=0; i<next; ++i){
+            unique.add(c.getValue(i));
+        }
+        return unique.size();
+    }
+
+    @Override
+    public int countUnique(final String col){
+        return countUnique(enforceName(col));
+    }
+
+    @Override
+    public DataFrame differenceColumns(final DataFrame df){
+        ensureValidColumnSetOperation(df);
+        if(df.isNullable()){
+            throw new DataFrameException(
+                    "Argument must be a DefaultDataFrame instance");
+        }
+        final DataFrame res = new DefaultDataFrame();
+        for(int i=0; i<columns.length; ++i){
+            final String name = columns[i].name;
+            if((name == null) || name.isEmpty()){
+                throw new DataFrameException(
+                        "Encountered an unlabeled "
+                        + "column at index " + i);
+            }
+            if(!df.hasColumn(name)){
+                res.addColumn(columns[i]);
+            }
+        }
+        final int length = df.columns();
+        for(int i=0; i<length; ++i){
+            final Column col = df.getColumn(i);
+            final String name = col.getName();
+            if((name == null) || name.isEmpty()){
+                throw new DataFrameException(
+                        "Encountered an unlabeled "
+                        + "column in the argument DataFrame at index "
+                        + i);
+            }
+            if(!hasColumn(name)){
+                res.addColumn(col);
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public DataFrame unionColumns(final DataFrame df){
+        ensureValidColumnSetOperation(df);
+        if(df.isNullable()){
+            throw new DataFrameException(
+                    "Argument must be a DefaultDataFrame instance");
+        }
+        final DataFrame res = new DefaultDataFrame();
+        for(int i=0; i<columns.length; ++i){
+            final String name = columns[i].name;
+            if((name == null) || name.isEmpty()){
+                throw new DataFrameException(
+                        "Encountered an unlabeled "
+                        + "column at index " + i);
+            }
+            res.addColumn(columns[i]);
+        }
+        final int length = df.columns();
+        for(int i=0; i<length; ++i){
+            final Column col = df.getColumn(i);
+            final String name = col.getName();
+            if((name == null) || name.isEmpty()){
+                throw new DataFrameException(
+                        "Encountered an unlabeled "
+                        + "column in the argument DataFrame at index "
+                        + i);
+            }
+            if(!res.hasColumn(name)){
+                res.addColumn(col);
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public DataFrame intersectionColumns(final DataFrame df){
+        ensureValidColumnSetOperation(df);
+        if(df.isNullable()){
+            throw new DataFrameException(
+                    "Argument must be a DefaultDataFrame instance");
+        }
+        final DataFrame res = new DefaultDataFrame();
+        for(int i=0; i<columns.length; ++i){
+            final String name = columns[i].name;
+            if((name == null) || name.isEmpty()){
+                throw new DataFrameException(
+                        "Encountered an unlabeled "
+                        + "column at index " + i);
+            }
+            if(df.hasColumn(name)){
+                res.addColumn(columns[i]);
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public DataFrame differenceRows(final DataFrame df){
+        ensureValidRowSetOperation(df);
+        final boolean argNullable = df.isNullable();
+        final DataFrame res = argNullable
+                ? new NullableDataFrame()
+                : new DefaultDataFrame();
+
+        for(int i=0; i<columns.length; ++i){
+            res.addColumn(argNullable
+                    ? Column.ofType(df.getColumn(i).typeCode())
+                    : Column.ofType(columns[i].typeCode()));
+        }
+        if(hasColumnNames()){
+            res.setColumnNames(getColumnNames());
+        }
+        final int argRows = df.rows();
+        final int[] hash0 = new int[next];
+        final int[] hash1 = new int[argRows];
+        for(int i=0; i<next; ++i){
+            hash0[i] = Arrays.hashCode(getRow(i));
+        }
+        for(int i=0; i<argRows; ++i){
+            hash1[i] = Arrays.hashCode(df.getRow(i));
+        }
+        for(int i=0; i<next; ++i){
+            final Object[] row = getRow(i);
+            boolean match = false;
+            for(int j=0; j<argRows; ++j){
+                if(hash0[i] == hash1[j]){
+                    if(Arrays.equals(row, df.getRow(j))){
+                        match = true;
+                        break;
+                    }
+                }
+            }
+            if(!match){
+                for(int k=0; k<i; ++k){
+                    if(hash0[i] == hash0[k]){
+                        if(Arrays.equals(row, getRow(k))){
+                            match = true;
+                        }
+                    }
+                }
+                if(!match){
+                    res.addRow(row);
+                }
+            }
+        }
+        for(int i=0; i<argRows; ++i){
+            final Object[] row = df.getRow(i);
+            boolean match = false;
+            for(int j=0; j<next; ++j){
+                if(hash1[i] == hash0[j]){
+                    if(Arrays.equals(row, getRow(j))){
+                        match = true;
+                        break;
+                    }
+                }
+
+            }
+            if(!match){
+                for(int k=0; k<i; ++k){
+                    if(hash1[i] == hash1[k]){
+                        if(Arrays.equals(row, df.getRow(k))){
+                            match = true;
+                        }
+                    }
+                }
+                if(!match){
+                    res.addRow(row);
+                }
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public DataFrame unionRows(final DataFrame df){
+        ensureValidRowSetOperation(df);
+        final boolean argNullable = df.isNullable();
+        final DataFrame res = argNullable
+                ? new NullableDataFrame()
+                : new DefaultDataFrame();
+
+        for(int i=0; i<columns.length; ++i){
+            res.addColumn(argNullable
+                    ? Column.ofType(df.getColumn(i).typeCode())
+                    : Column.ofType(columns[i].typeCode()));
+        }
+        if(hasColumnNames()){
+            res.setColumnNames(getColumnNames());
+        }
+        final int argRows = df.rows();
+        final int[] hash0 = new int[next];
+        final int[] hash1 = new int[argRows];
+        for(int i=0; i<next; ++i){
+            hash0[i] = Arrays.hashCode(getRow(i));
+        }
+        for(int i=0; i<argRows; ++i){
+            hash1[i] = Arrays.hashCode(df.getRow(i));
+        }
+        for(int i=0; i<next; ++i){
+            final Object[] row = getRow(i);
+            boolean match = false;
+            for(int k=0; k<i; ++k){
+                if(hash0[k] == hash0[i]){
+                    if(Arrays.equals(row, getRow(k))){
+                        match = true;
+                    }
+                }
+            }
+            if(!match){
+                res.addRow(row);
+            }
+        }
+        for(int i=0; i<argRows; ++i){
+            final Object[] row = df.getRow(i);
+            boolean match = false;
+            for(int j=0; j<next; ++j){
+                if(hash0[j] == hash1[i]){
+                    if(Arrays.equals(row, getRow(j))){
+                        match = true;
+                        break;
+                    }
+                }
+
+            }
+            if(!match){
+                for(int k=0; k<i; ++k){
+                    if(hash1[k] == hash1[i]){
+                        if(Arrays.equals(row, df.getRow(k))){
+                            match = true;
+                        }
+                    }
+                }
+                if(!match){
+                    res.addRow(row);
+                }
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public DataFrame intersectionRows(final DataFrame df){
+        ensureValidRowSetOperation(df);
+        final boolean argNullable = df.isNullable();
+        final DataFrame res = argNullable
+                ? new NullableDataFrame()
+                : new DefaultDataFrame();
+
+        for(int i=0; i<columns.length; ++i){
+            res.addColumn(argNullable
+                    ? Column.ofType(df.getColumn(i).typeCode())
+                    : Column.ofType(columns[i].typeCode()));
+        }
+        if(hasColumnNames()){
+            res.setColumnNames(getColumnNames());
+        }
+        final int argRows = df.rows();
+        final int[] hash0 = new int[next];
+        final int[] hash1 = new int[argRows];
+        for(int i=0; i<next; ++i){
+            hash0[i] = Arrays.hashCode(getRow(i));
+        }
+        for(int i=0; i<argRows; ++i){
+            hash1[i] = Arrays.hashCode(df.getRow(i));
+        }
+        for(int i=0; i<next; ++i){
+            final Object[] row = getRow(i);
+            boolean match = false;
+            for(int j=0; j<argRows; ++j){
+                if(hash0[i] == hash1[j]){
+                    if(Arrays.equals(row, df.getRow(j))){
+                        match = true;
+                        break;
+                    }
+                }
+            }
+            if(match){
+                //check for duplicate row already
+                //in the result DataFrame
+                for(int k=0; k<i; ++k){
+                    if(hash0[i] == hash0[k]){
+                        //hashes match. Check for equality
+                        if(Arrays.equals(row, getRow(k))){
+                            //duplicate row
+                            match = false;
+                        }
+                    }
+                }
+                if(match){
+                    res.addRow(row);
+                }
+            }
+        }
+        return res;
     }
 
     @Override
     public double average(final int col){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         final Column c = columns[col];
-        if(isNaN(c) || (next == 0)){
-            throw new DataFrameException("Unable to compute average. Column consists of NaNs");
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute average. "
+                                       + "Column " + s + " is not numeric");
+        }
+        if(next == 0){
+            return Double.NaN;
         }
         double avg = 0;
         switch(c.typeCode()){
         case FloatColumn.TYPE_CODE:
             final FloatColumn columnFloat = ((FloatColumn)c);
             for(int i=0; i<next; ++i){
-                avg+=columnFloat.get(i);
+                avg += columnFloat.get(i);
             }
             break;
         case DoubleColumn.TYPE_CODE:
             final DoubleColumn columnDouble = ((DoubleColumn)c);
             for(int i=0; i<next; ++i){
-                avg+=columnDouble.get(i);
+                avg += columnDouble.get(i);
             }
             break;
         case ByteColumn.TYPE_CODE:
             final ByteColumn columnByte = ((ByteColumn)c);
             for(int i=0; i<next; ++i){
-                avg+=columnByte.get(i);
+                avg += columnByte.get(i);
             }
             break;
         case ShortColumn.TYPE_CODE:
             final ShortColumn columnShort = ((ShortColumn)c);
             for(int i=0; i<next; ++i){
-                avg+=columnShort.get(i);
+                avg += columnShort.get(i);
             }
             break;
         case IntColumn.TYPE_CODE:
             final IntColumn columnInt = ((IntColumn)c);
             for(int i=0; i<next; ++i){
-                avg+=columnInt.get(i);
+                avg += columnInt.get(i);
             }
             break;
         case LongColumn.TYPE_CODE:
             final LongColumn columnLong = ((LongColumn)c);
             for(int i=0; i<next; ++i){
-                avg+=columnLong.get(i);
+                avg += columnLong.get(i);
             }
             break;
         default:
@@ -1416,36 +1599,94 @@ public class DefaultDataFrame implements DataFrame {
     }
 
     @Override
-    public double average(final String colName){
-        return average(enforceName(colName));
+    public double average(final String col){
+        return average(enforceName(col));
+    }
+
+    @Override
+    public double median(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute median. "
+                                       + "Column " + s + " is not numeric");
+        }
+        if(next == 0){
+            return Double.NaN;
+        }
+        this.flush();
+        final DataFrame tmp = new DefaultDataFrame(c.clone());
+        tmp.sortBy(0);
+        final boolean even = (next % 2 == 0);
+        final int mid = next/2;
+        double d;
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            d = (double) tmp.getFloat(0, mid);
+            return even ? (((double) tmp.getFloat(0, mid-1) + d) / 2) : d;
+        case DoubleColumn.TYPE_CODE:
+            d = tmp.getDouble(0, mid);
+            return even ? ((tmp.getDouble(0, mid-1) + d) / 2) : d;
+        case ByteColumn.TYPE_CODE:
+            d = (double) tmp.getByte(0, mid);
+            return even ? (((double) tmp.getByte(0, mid-1) + d) / 2) : d;
+        case ShortColumn.TYPE_CODE:
+            d = (double) tmp.getShort(0, mid);
+            return even ? (((double) tmp.getShort(0, mid-1) + d) / 2) : d;
+        case IntColumn.TYPE_CODE:
+            d = (double) tmp.getInt(0, mid);
+            return even ? (((double) tmp.getInt(0, mid-1) + d) / 2) : d;
+        case LongColumn.TYPE_CODE:
+            d = (double) tmp.getLong(0, mid);
+            return even ? (((double) tmp.getLong(0, mid-1) + d) / 2) : d;
+        default:
+            throw new DataFrameException("Unrecognized column type");
+        }
+    }
+
+    @Override
+    public double median(final String col){
+        return median(enforceName(col));
     }
 
     @Override
     public double minimum(final int col){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         final Column c = columns[col];
-        if(isNaN(c) || (next == 0)){
-            throw new DataFrameException("Unable to compute minimum. Column consists of NaNs");
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute minimum. "
+                                       + "Column " + s + " is not numeric");
         }
-        Double min = 0.0;
+        if(next == 0){
+            return Double.NaN;
+        }
+        double min = 0.0;
         switch(c.typeCode()){
         case FloatColumn.TYPE_CODE:
             float minFloat = Float.MAX_VALUE;
             final FloatColumn columnFloat = ((FloatColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnFloat.get(i)<minFloat){
+                if(columnFloat.get(i) < minFloat){
                     minFloat = columnFloat.get(i);
                 }
             }
-            min = (double)minFloat;
+            min = (double) minFloat;
             break;
         case DoubleColumn.TYPE_CODE:
             double minDouble = Double.MAX_VALUE;
             final DoubleColumn columnDouble = ((DoubleColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnDouble.get(i)<minDouble){
+                if(columnDouble.get(i) < minDouble){
                     minDouble = columnDouble.get(i);
                 }
             }
@@ -1455,41 +1696,41 @@ public class DefaultDataFrame implements DataFrame {
             byte minByte = Byte.MAX_VALUE;
             final ByteColumn columnByte = ((ByteColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnByte.get(i)<minByte){
+                if(columnByte.get(i) < minByte){
                     minByte = columnByte.get(i);
                 }
             }
-            min = (double)minByte;
+            min = (double) minByte;
             break;
         case ShortColumn.TYPE_CODE:
             short minShort = Short.MAX_VALUE;
             final ShortColumn columnShort = ((ShortColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnShort.get(i)<minShort){
+                if(columnShort.get(i) < minShort){
                     minShort = columnShort.get(i);
                 }
             }
-            min = (double)minShort;
+            min = (double) minShort;
             break;
         case IntColumn.TYPE_CODE:
             int minInt = Integer.MAX_VALUE;
             final IntColumn columnInt = ((IntColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnInt.get(i)<minInt){
+                if(columnInt.get(i) < minInt){
                     minInt = columnInt.get(i);
                 }
             }
-            min = (double)minInt;
+            min = (double) minInt;
             break;
         case LongColumn.TYPE_CODE:
             long minLong = Long.MAX_VALUE;
             final LongColumn columnLong = ((LongColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnLong.get(i)<minLong){
+                if(columnLong.get(i) < minLong){
                     minLong = columnLong.get(i);
                 }
             }
-            min = (double)minLong;
+            min = (double) minLong;
             break;
         default:
             throw new DataFrameException("Unrecognized column type");
@@ -1498,36 +1739,215 @@ public class DefaultDataFrame implements DataFrame {
     }
 
     @Override
-    public double minimum(final String colName){
-        return minimum(enforceName(colName));
+    public double minimum(final String col){
+        return minimum(enforceName(col));
+    }
+
+    @Override
+    public DataFrame minimum(final int col, int rank){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        if(rank <= 0){
+            throw new DataFrameException("Invalid rank argument: " + rank);
+        }
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute minimum. "
+                                       + "Column " + s + " is not numeric");
+        }
+        if(rank > next){
+            rank = next;
+        }
+        final Column[] cols = new Column[columns.length];
+        for(int i=0; i<columns.length; ++i){
+            cols[i] = Column.ofType(columns[i].typeCode(), rank);
+        }
+        final DataFrame df = new DefaultDataFrame(cols);
+        if(hasColumnNames()){
+            df.setColumnNames(getColumnNames());
+        }
+        final int[] indices = new int[rank];
+        for(int i=0; i<rank; ++i){
+            indices[i] = -1;
+        }
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            final FloatColumn columnFloat = ((FloatColumn)c);
+            for(int i=0; i<rank; ++i){
+                float minFloat = Float.MAX_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnFloat.get(j) < minFloat){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            minFloat = columnFloat.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final DoubleColumn columnDouble = ((DoubleColumn)c);
+            for(int i=0; i<rank; ++i){
+                double minDouble = Double.MAX_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnDouble.get(j) < minDouble){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            minDouble = columnDouble.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        case ByteColumn.TYPE_CODE:
+            final ByteColumn columnByte = ((ByteColumn)c);
+            for(int i=0; i<rank; ++i){
+                byte minByte = Byte.MAX_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnByte.get(j) < minByte){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            minByte = columnByte.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        case ShortColumn.TYPE_CODE:
+            final ShortColumn columnShort = ((ShortColumn)c);
+            for(int i=0; i<rank; ++i){
+                short minShort = Short.MAX_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnShort.get(j) < minShort){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            minShort = columnShort.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        case IntColumn.TYPE_CODE:
+            final IntColumn columnInt = ((IntColumn)c);
+            for(int i=0; i<rank; ++i){
+                int minInt = Integer.MAX_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnInt.get(j) < minInt){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            minInt = columnInt.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        case LongColumn.TYPE_CODE:
+            final LongColumn columnLong = ((LongColumn)c);
+            for(int i=0; i<rank; ++i){
+                long minLong = Long.MAX_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnLong.get(j) < minLong){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            minLong = columnLong.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        default:
+            throw new DataFrameException("Unrecognized column type");
+        }
+        for(int i=0; i<rank; ++i){
+            df.setRow(i, this.getRow(indices[i]));
+        }
+        return df;
+    }
+
+    @Override
+    public DataFrame minimum(final String col, final int rank){
+        return minimum(enforceName(col), rank);
     }
 
     @Override
     public double maximum(final int col){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
         final Column c = columns[col];
-        if(isNaN(c) || (next == 0)){
-            throw new DataFrameException("Unable to compute maximum. Column consists of NaNs");
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute maximum. "
+                                       + "Column " + s + " is not numeric");
         }
-        Double max = 0.0;
+        if(next == 0){
+            return Double.NaN;
+        }
+        double max = 0.0;
         switch(c.typeCode()){
         case FloatColumn.TYPE_CODE:
-            float maxFloat = Float.MIN_VALUE;
+            float maxFloat = -Float.MAX_VALUE;
             final FloatColumn columnFloat = ((FloatColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnFloat.get(i)>maxFloat){
+                if(columnFloat.get(i) > maxFloat){
                     maxFloat = columnFloat.get(i);
                 }
             }
-            max = (double)maxFloat;
+            max = (double) maxFloat;
             break;
         case DoubleColumn.TYPE_CODE:
-            double maxDouble = Double.MIN_VALUE;
+            double maxDouble = -Double.MAX_VALUE;
             final DoubleColumn columnDouble = ((DoubleColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnDouble.get(i)>maxDouble){
+                if(columnDouble.get(i) > maxDouble){
                     maxDouble = columnDouble.get(i);
                 }
             }
@@ -1537,41 +1957,41 @@ public class DefaultDataFrame implements DataFrame {
             byte maxByte = Byte.MIN_VALUE;
             final ByteColumn columnByte = ((ByteColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnByte.get(i)>maxByte){
+                if(columnByte.get(i) > maxByte){
                     maxByte = columnByte.get(i);
                 }
             }
-            max = (double)maxByte;
+            max = (double) maxByte;
             break;
         case ShortColumn.TYPE_CODE:
             short maxShort = Short.MIN_VALUE;
             final ShortColumn columnShort = ((ShortColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnShort.get(i)>maxShort){
+                if(columnShort.get(i) > maxShort){
                     maxShort = columnShort.get(i);
                 }
             }
-            max = (double)maxShort;
+            max = (double) maxShort;
             break;
         case IntColumn.TYPE_CODE:
             int maxInt = Integer.MIN_VALUE;
             final IntColumn columnInt = ((IntColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnInt.get(i)>maxInt){
+                if(columnInt.get(i) > maxInt){
                     maxInt = columnInt.get(i);
                 }
             }
-            max = (double)maxInt;
+            max = (double) maxInt;
             break;
         case LongColumn.TYPE_CODE:
             long maxLong = Long.MIN_VALUE;
             final LongColumn columnLong = ((LongColumn)c);
             for(int i=0; i<next; ++i){
-                if(columnLong.get(i)>maxLong){
+                if(columnLong.get(i) > maxLong){
                     maxLong = columnLong.get(i);
                 }
             }
-            max = (double)maxLong;
+            max = (double) maxLong;
             break;
         default:
             throw new DataFrameException("Unrecognized column type");
@@ -1580,132 +2000,668 @@ public class DefaultDataFrame implements DataFrame {
     }
 
     @Override
-    public double maximum(final String colName){
-        return maximum(enforceName(colName));
+    public double maximum(final String col){
+        return maximum(enforceName(col));
     }
 
     @Override
-    public void sortBy(final int col){
+    public DataFrame maximum(final int col, int rank){
         if((next == -1) || (col < 0) || (col >= columns.length)){
-            throw new DataFrameException("Invalid column index: "+col);
+            throw new DataFrameException("Invalid column index: " + col);
         }
-        DefaultDataFrame.QuickSort.sort(columns[col], columns, next);
-    }
-
-    @Override
-    public void sortBy(final String colName){
-        final int col = enforceName(colName);
-        DefaultDataFrame.QuickSort.sort(columns[col], columns, next);
-    }
-
-    @Override
-    public Object[][] asArray(){
-        if(next == -1){
-            return null;
+        if(rank <= 0){
+            throw new DataFrameException("Invalid rank argument: " + rank);
         }
-        final Object[][] a = new Object[columns.length][next];
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute maximum. "
+                                       + "Column " + s + " is not numeric");
+        }
+        if(rank > next){
+            rank = next;
+        }
+        final Column[] cols = new Column[columns.length];
         for(int i=0; i<columns.length; ++i){
-            final Column c = (Column)getColumnAt(i).clone();
-            for(int j=0; j<next; ++j){
-                a[i][j] = c.getValueAt(j);
-            }
+            cols[i] = Column.ofType(columns[i].typeCode(), rank);
         }
-        return a;
-    }
-
-    @Override
-    public String toString(){
-        if(columns == null){
-            return "uninitialized DataFrame instance";
+        final DataFrame df = new DefaultDataFrame(cols);
+        if(hasColumnNames()){
+            df.setColumnNames(getColumnNames());
         }
-        final String nl = System.lineSeparator();
-        int[] max = new int[columns.length];
-        int maxIdx = String.valueOf(next-1).length();
-        for(int i=0; i<columns.length; ++i){
-            int k = 0;
-            for(int j=0; j<next; ++j){
-                if(String.valueOf(columns[i].getValueAt(j)).length() > k){
-                    k = String.valueOf(columns[i].getValueAt(j)).length();
-                }
-            }
-            max[i] = k;
+        final int[] indices = new int[rank];
+        for(int i=0; i<rank; ++i){
+            indices[i] = -1;
         }
-        String[] n = new String[columns.length];
-        if(names != null){
-            final Set<Map.Entry<String, Integer>> set = names.entrySet();
-            for(int i=0; i<columns.length; ++i){
-                String s = null;
-                for(final Map.Entry<String, Integer> e : set){
-                    if(e.getValue() == i){
-                        s = e.getKey();
-                        break;
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            final FloatColumn columnFloat = ((FloatColumn)c);
+            for(int i=0; i<rank; ++i){
+                float maxFloat = -Float.MAX_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnFloat.get(j) > maxFloat){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            maxFloat = columnFloat.get(j);
+                            indices[i] = j;
+                        }
                     }
                 }
-                n[i] = (s != null ? s : String.valueOf(i));
             }
-        }else{
-            for(int i=0; i<columns.length; ++i){
-                n[i] = (i+" ");
-            }
-        }
-        for(int i=0; i<columns.length; ++i){
-            max[i] = (max[i]>=n[i].length() ? max[i] : n[i].length());
-        }
-        final StringBuilder sb = new StringBuilder();
-        for(int i=0; i<maxIdx; ++i){
-            sb.append("_");
-        }
-        sb.append("|");
-        for(int i=0; i<columns.length; ++i){
-            sb.append(" ");
-            sb.append(n[i]);
-            for(int j=(max[i]-n[i].length()); j>0; --j){
-                sb.append(" ");
-            }
-        }
-        sb.append(nl);
-        for(int i=0; i<next; ++i){
-            sb.append(i);
-            for(int ii=0; ii<(maxIdx-String.valueOf(i).length()); ++ii){
-                sb.append(" ");
-            }
-            sb.append("| ");
-            for(int j=0; j<columns.length; ++j){
-                final Object val = columns[j].getValueAt(i);
-                final String s = (val != null ? val.toString() : "n/a");
-                sb.append(s);
-                for(int k=(max[j]-s.length()); k>=0; --k){
-                    sb.append(" ");
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final DoubleColumn columnDouble = ((DoubleColumn)c);
+            for(int i=0; i<rank; ++i){
+                double maxDouble = -Double.MAX_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnDouble.get(j) > maxDouble){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            maxDouble = columnDouble.get(j);
+                            indices[i] = j;
+                        }
+                    }
                 }
             }
-            sb.append(nl);
+            break;
+        case ByteColumn.TYPE_CODE:
+            final ByteColumn columnByte = ((ByteColumn)c);
+            for(int i=0; i<rank; ++i){
+                byte maxByte = Byte.MIN_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnByte.get(j) > maxByte){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            maxByte = columnByte.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        case ShortColumn.TYPE_CODE:
+            final ShortColumn columnShort = ((ShortColumn)c);
+            for(int i=0; i<rank; ++i){
+                short maxShort = Short.MIN_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnShort.get(j) > maxShort){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            maxShort = columnShort.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        case IntColumn.TYPE_CODE:
+            final IntColumn columnInt = ((IntColumn)c);
+            for(int i=0; i<rank; ++i){
+                int maxInt = Integer.MIN_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnInt.get(j) > maxInt){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            maxInt = columnInt.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        case LongColumn.TYPE_CODE:
+            final LongColumn columnLong = ((LongColumn)c);
+            for(int i=0; i<rank; ++i){
+                long maxLong = Long.MIN_VALUE;
+                for(int j=0; j<next; ++j){
+                    if(columnLong.get(j) > maxLong){
+                        boolean taken = false;
+                        for(int k=0; k<rank; ++k){
+                            if(indices[k] == j){
+                                taken = true;
+                                break;
+                            }
+                        }
+                        if(!taken){
+                            maxLong = columnLong.get(j);
+                            indices[i] = j;
+                        }
+                    }
+                }
+            }
+            break;
+        default:
+            throw new DataFrameException("Unrecognized column type");
         }
-        return sb.toString();
+        for(int i=0; i<rank; ++i){
+            df.setRow(i, this.getRow(indices[i]));
+        }
+        return df;
     }
 
     @Override
-    public Object clone(){
-        return DataFrame.copyOf(this);
+    public DataFrame maximum(final String col, final int rank){
+        return maximum(enforceName(col), rank);
     }
 
     @Override
-    public int hashCode(){
-        int hash = 0;
-        final String[] n = this.getColumnNames();
-        if(n != null){
-            for(int i=0; i<columns.length; ++i){
-                hash += n[i].hashCode();
-                hash += columns[i].typeCode();
+    public double sum(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute sum. "
+                                       + "Column " + s + " is not numeric");
+        }
+        if(next == 0){
+            return Double.NaN;
+        }
+        double sum = 0.0;
+        long sumInteger = 0l;
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            final FloatColumn columnFloat = ((FloatColumn)c);
+            for(int i=0; i<next; ++i){
+                sum += (double) columnFloat.get(i);
+            }
+            return sum;
+        case DoubleColumn.TYPE_CODE:
+            final DoubleColumn columnDouble = ((DoubleColumn)c);
+            for(int i=0; i<next; ++i){
+                sum += columnDouble.get(i);
+            }
+            return sum;
+        case ByteColumn.TYPE_CODE:
+            final ByteColumn columnByte = ((ByteColumn)c);
+            for(int i=0; i<next; ++i){
+                sumInteger += columnByte.get(i);
+            }
+            return (double) sumInteger;
+        case ShortColumn.TYPE_CODE:
+            final ShortColumn columnShort = ((ShortColumn)c);
+            for(int i=0; i<next; ++i){
+                sumInteger += columnShort.get(i);
+            }
+            return (double) sumInteger;
+        case IntColumn.TYPE_CODE:
+            final IntColumn columnInt = ((IntColumn)c);
+            for(int i=0; i<next; ++i){
+                sumInteger += columnInt.get(i);
+            }
+            return (double) sumInteger;
+        case LongColumn.TYPE_CODE:
+            final LongColumn columnLong = ((LongColumn)c);
+            for(int i=0; i<next; ++i){
+                sumInteger += columnLong.get(i);
+            }
+            return (double) sumInteger;
+        default:
+            throw new DataFrameException("Unrecognized column type");
+        }
+    }
+
+    @Override
+    public double sum(final String col){
+        return sum(enforceName(col));
+    }
+
+    @Override
+    public DataFrame absolute(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute absolutes. "
+                                       + "Column " + s + " is not numeric");
+        }
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            final FloatColumn cFloat = ((FloatColumn)c);
+            for(int i=0; i<next; ++i){
+                cFloat.set(i, Math.abs(cFloat.get(i)));
+            }
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final DoubleColumn cDouble = ((DoubleColumn)c);
+            for(int i=0; i<next; ++i){
+                cDouble.set(i, Math.abs(cDouble.get(i)));
+            }
+            break;
+        case ByteColumn.TYPE_CODE:
+            final ByteColumn cByte = ((ByteColumn)c);
+            for(int i=0; i<next; ++i){
+                cByte.set(i, (byte)((cByte.get(i) < 0)
+                        ? -cByte.get(i)
+                        : cByte.get(i)));
+            }
+            break;
+        case ShortColumn.TYPE_CODE:
+            final ShortColumn cShort = ((ShortColumn)c);
+            for(int i=0; i<next; ++i){
+                cShort.set(i, (short)((cShort.get(i) < 0)
+                        ? -cShort.get(i)
+                        : cShort.get(i)));
+            }
+            break;
+        case IntColumn.TYPE_CODE:
+            final IntColumn cInt = ((IntColumn)c);
+            for(int i=0; i<next; ++i){
+                cInt.set(i, Math.abs(cInt.get(i)));
+            }
+            break;
+        case LongColumn.TYPE_CODE:
+            final LongColumn cLong = ((LongColumn)c);
+            for(int i=0; i<next; ++i){
+                cLong.set(i, Math.abs(cLong.get(i)));
+            }
+            break;
+        default:
+            throw new DataFrameException("Unrecognized column type");
+        }
+        return this;
+    }
+
+    @Override
+    public DataFrame absolute(final String col){
+        return absolute(enforceName(col));
+    }
+
+    @Override
+    public DataFrame ceil(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute ceil values. "
+                                       + "Column " + s + " is not numeric");
+        }
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            final FloatColumn cFloat = ((FloatColumn)c);
+            for(int i=0; i<next; ++i){
+                cFloat.set(i, (float)Math.ceil(cFloat.get(i)));
+            }
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final DoubleColumn cDouble = ((DoubleColumn)c);
+            for(int i=0; i<next; ++i){
+                cDouble.set(i, Math.ceil(cDouble.get(i)));
+            }
+            break;
+        case ByteColumn.TYPE_CODE:
+            return this;
+        case ShortColumn.TYPE_CODE:
+            return this;
+        case IntColumn.TYPE_CODE:
+            return this;
+        case LongColumn.TYPE_CODE:
+            return this;
+        default:
+            throw new DataFrameException("Unrecognized column type");
+        }
+        return this;
+    }
+
+    @Override
+    public DataFrame ceil(final String col){
+        return ceil(enforceName(col));
+    }
+
+    @Override
+    public DataFrame floor(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to compute floor values. "
+                                       + "Column " + s + " is not numeric");
+        }
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            final FloatColumn cFloat = ((FloatColumn)c);
+            for(int i=0; i<next; ++i){
+                cFloat.set(i, (float)Math.floor(cFloat.get(i)));
+            }
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final DoubleColumn cDouble = ((DoubleColumn)c);
+            for(int i=0; i<next; ++i){
+                cDouble.set(i, Math.floor(cDouble.get(i)));
+            }
+            break;
+        case ByteColumn.TYPE_CODE:
+            return this;
+        case ShortColumn.TYPE_CODE:
+            return this;
+        case IntColumn.TYPE_CODE:
+            return this;
+        case LongColumn.TYPE_CODE:
+            return this;
+        default:
+            throw new DataFrameException("Unrecognized column type");
+        }
+        return this;
+    }
+
+    @Override
+    public DataFrame floor(final String col){
+        return floor(enforceName(col));
+    }
+
+    @Override
+    public DataFrame round(final int col, final int decPlaces){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        if(decPlaces < 0){
+            throw new DataFrameException("Invalid argument for decimal places: "
+                                         + decPlaces);
+        }
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to round values. "
+                                       + "Column " + s + " is not numeric");
+        }
+        double op = 1.0;
+        if(decPlaces > 0){
+            for(int i=0; i<decPlaces; ++i){
+                op *= 10;
             }
         }
-        for(final Column col : this){
-            hash += col.hashCode();
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            final FloatColumn cFloat = ((FloatColumn)c);
+            for(int i=0; i<next; ++i){
+                cFloat.set(i, (float)(Math.round(cFloat.get(i) * op) / op));
+            }
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final DoubleColumn cDouble = ((DoubleColumn)c);
+            for(int i=0; i<next; ++i){
+                cDouble.set(i, Math.round(cDouble.get(i) * op) / op);
+            }
+            break;
+        case ByteColumn.TYPE_CODE:
+            return this;
+        case ShortColumn.TYPE_CODE:
+            return this;
+        case IntColumn.TYPE_CODE:
+            return this;
+        case LongColumn.TYPE_CODE:
+            return this;
+        default:
+            throw new DataFrameException("Unrecognized column type");
         }
-        return hash;
+        return this;
     }
 
     @Override
-    public boolean equals(Object obj){
+    public DataFrame round(final String col, final int decPlaces){
+        return round(enforceName(col), decPlaces);
+    }
+
+    @Override
+    public DataFrame clip(final int col, final Number low, final Number high){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        final Column c = columns[col];
+        if(!c.isNumeric()){
+            final String s = (c.name != null)
+                    ? "'" + c.name + "'" : "at index " + col;
+
+            throw new DataFrameException("Unable to clip values. "
+                                       + "Column " + s + " is not numeric");
+        }
+        switch(c.typeCode()){
+        case FloatColumn.TYPE_CODE:
+            final float lowF = (low != null) ? low.floatValue() : -Float.MAX_VALUE;
+            final float highF = (high != null) ? high.floatValue() : Float.MAX_VALUE;
+            if(lowF >= highF){ throw new DataFrameException("Invalid threshold range"); }
+            final FloatColumn cFloat = ((FloatColumn)c);
+            for(int i=0; i<next; ++i){
+                float val = cFloat.get(i);
+                if(val < lowF){ val = lowF; }
+                if(val > highF){ val = highF; }
+                cFloat.set(i, val);
+            }
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final double lowD = (low != null) ? low.doubleValue() : -Double.MAX_VALUE;
+            final double highD = (high != null) ? high.doubleValue() : Double.MAX_VALUE;
+            if(lowD >= highD){ throw new DataFrameException("Invalid threshold range"); }
+            final DoubleColumn cDouble = ((DoubleColumn)c);
+            for(int i=0; i<next; ++i){
+                double val = cDouble.get(i);
+                if(val < lowD){ val = lowD; }
+                if(val > highD){ val = highD; }
+                cDouble.set(i, val);
+            }
+            break;
+        case ByteColumn.TYPE_CODE:
+            final byte lowB = (low != null) ? low.byteValue() : Byte.MIN_VALUE;
+            final byte highB = (high != null) ? high.byteValue() : Byte.MAX_VALUE;
+            if(lowB >= highB){ throw new DataFrameException("Invalid threshold range"); }
+            final ByteColumn cByte = ((ByteColumn)c);
+            for(int i=0; i<next; ++i){
+                byte val = cByte.get(i);
+                if(val < lowB){ val = lowB; }
+                if(val > highB){ val = highB; }
+                cByte.set(i, val);
+            }
+            break;
+        case ShortColumn.TYPE_CODE:
+            final short lowS = (low != null) ? low.shortValue() : Short.MIN_VALUE;
+            final short highS = (high != null) ? high.shortValue() : Short.MAX_VALUE;
+            if(lowS >= highS){ throw new DataFrameException("Invalid threshold range"); }
+            final ShortColumn cShort = ((ShortColumn)c);
+            for(int i=0; i<next; ++i){
+                short val = cShort.get(i);
+                if(val < lowS){ val = lowS; }
+                if(val > highS){ val = highS; }
+                cShort.set(i, val);
+            }
+            break;
+        case IntColumn.TYPE_CODE:
+            final int lowI = (low != null) ? low.intValue() : Integer.MIN_VALUE;
+            final int highI = (high != null) ? high.intValue() : Integer.MAX_VALUE;
+            if(lowI >= highI){ throw new DataFrameException("Invalid threshold range"); }
+            final IntColumn cInt = ((IntColumn)c);
+            for(int i=0; i<next; ++i){
+                int val = cInt.get(i);
+                if(val < lowI){ val = lowI; }
+                if(val > highI){ val = highI; }
+                cInt.set(i, val);
+            }
+            break;
+        case LongColumn.TYPE_CODE:
+            final long lowL = (low != null) ? low.longValue() : Long.MIN_VALUE;
+            final long highL = (high != null) ? high.longValue() : Long.MAX_VALUE;
+            if(lowL >= highL){ throw new DataFrameException("Invalid threshold range"); }
+            final LongColumn cLong = ((LongColumn)c);
+            for(int i=0; i<next; ++i){
+                long val = cLong.get(i);
+                if(val < lowL){ val = lowL; }
+                if(val > highL){ val = highL; }
+                cLong.set(i, val);
+            }
+            break;
+        default:
+            throw new DataFrameException("Unrecognized column type");
+        }
+        return this;
+    }
+
+    @Override
+    public DataFrame clip(final String col, final Number low, final Number high){
+        return clip(enforceName(col), low, high);
+    }
+
+    @Override
+    public DataFrame sortBy(final int col){
+        return sortAscendingBy(col);
+    }
+
+    @Override
+    public DataFrame sortBy(final String col){
+        return sortAscendingBy(col);
+    }
+
+    @Override
+    public DataFrame sortAscendingBy(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        DefaultDataFrame.QuickSort.sort(columns[col], columns, next, true);
+        return this;
+    }
+
+    @Override
+    public DataFrame sortAscendingBy(final String col){
+        final int c = enforceName(col);
+        DefaultDataFrame.QuickSort.sort(columns[c], columns, next, true);
+        return this;
+    }
+
+    @Override
+    public DataFrame sortDescendingBy(final int col){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        DefaultDataFrame.QuickSort.sort(columns[col], columns, next, false);
+        return this;
+    }
+
+    @Override
+    public DataFrame sortDescendingBy(final String col){
+        final int c = enforceName(col);
+        DefaultDataFrame.QuickSort.sort(columns[c], columns, next, false);
+        return this;
+    }
+
+    @Override
+    public DataFrame head(){
+        return head(5);
+    }
+
+    @Override
+    public DataFrame head(int rows){
+        if(rows < 0){
+            throw new DataFrameException("Invalid row argument: " + rows);
+        }
+        if(next == -1){
+            return new DefaultDataFrame();
+        }
+        if(rows > next){
+            rows = next;
+        }
+        final Column[] cols = new Column[columns.length];
+        for(int i=0; i<columns.length; ++i){
+            cols[i] = Column.ofType(columns[i].typeCode(),
+                    (rows >= 0) ? rows : 0);
+
+        }
+        final DataFrame df = new DefaultDataFrame(cols);
+        if(hasColumnNames()){
+            df.setColumnNames(getColumnNames());
+        }
+        for(int i=0; i<rows; ++i){
+            df.setRow(i, this.getRow(i));
+        }
+        return df;
+    }
+
+    @Override
+    public DataFrame tail(){
+        return tail(5);
+    }
+
+    @Override
+    public DataFrame tail(int rows){
+        if(rows < 0){
+            throw new DataFrameException("Invalid row argument: " + rows);
+        }
+        if(next == -1){
+            return new DefaultDataFrame();
+        }
+        if(rows > next){
+            rows = next;
+        }
+        final Column[] cols = new Column[columns.length];
+        for(int i=0; i<columns.length; ++i){
+            cols[i] = Column.ofType(columns[i].typeCode(),
+                    (rows >= 0) ? rows : 0);
+
+        }
+        final DataFrame df = new DefaultDataFrame(cols);
+        if(hasColumnNames()){
+            df.setColumnNames(getColumnNames());
+        }
+        if(rows >= 0){
+            final int offset = next - rows;
+            for(int i=0; i<rows; ++i){
+                df.setRow(i, this.getRow(offset + i));
+            }
+        }
+        return df;
+    }
+
+    @Override
+    public boolean equals(final Object obj){
+        if(obj == null){
+            return false;
+        }
         if(!(obj instanceof DefaultDataFrame)){
             return false;
         }
@@ -1726,7 +2682,7 @@ public class DefaultDataFrame implements DataFrame {
                 }
             }
             //compare column types
-            if(this.getColumnAt(i).typeCode() != df.getColumnAt(i).typeCode()){
+            if(this.getColumn(i).typeCode() != df.getColumn(i).typeCode()){
                 return false;
             }
         }
@@ -1735,8 +2691,9 @@ public class DefaultDataFrame implements DataFrame {
         df.flush();
         //compare data
         int idx = 0;
-        for(final Column col2 : df){
-            final Column col1 = getColumnAt(idx++);
+        for(int i=0; i<df.columns(); ++i){
+            final Column col2 = df.getColumn(i);
+            final Column col1 = this.getColumn(idx++);
             if(!col2.equals(col1)){
                 return false;
             }
@@ -1745,128 +2702,44 @@ public class DefaultDataFrame implements DataFrame {
     }
 
     @Override
-    public Iterator<Column> iterator(){
-        return new ColumnIterator(this);
+    protected DataFrame createInstance(){
+        return new DefaultDataFrame();
     }
 
-    /**
-     * Initialization method for assigning this DataFrame the specified columns and their names
-     * 
-     * @param columns The columns to use in this DataFrame instance
-     */
-    private void assignColumns(final Column[] columns){
-        if((columns == null) || (columns.length == 0)){
-            throw new DataFrameException("Arg must not be null or empty");
-        }
-        int colSize = columns[0].capacity();
-        for(int i=1; i<columns.length; ++i){
-            if(columns[i].capacity() != colSize){
-                throw new DataFrameException("Columns have deviating sizes");
-            }
-        }
-        this.columns = new Column[columns.length];
-        for(int i=0; i<columns.length; ++i){
-            final Column col = columns[i];
-            if(col.isNullable()){
-                throw new DataFrameException("DefaultDataFrame cannot use NullableColumn instance");
-            }
-            this.columns[i] = col;
-            if((col.name != null) && !(col.name.isEmpty())){
-                if(names == null){
-                    this.names = new HashMap<String, Integer>(16);
-                }
-                this.names.put(col.name, i);
-            }
-        }
-        this.next = colSize;
-    }
-
-    /**
-     * Resizes all columns sequentially
-     */
-    private void resize(){
-        for(final Column col : columns){
-            col.resize();
-        }
-    }
-
-    /**
-     * Enforces that all entries in the given row adhere to the column types in this DataFrame
-     * 
-     * @param row The row to check against type missmatches
-     */
-    private void enforceTypes(final Object[] row){
+    @Override
+    protected void enforceTypes(final Object[] row){
         if((next == -1) || (row.length != columns.length)){
-            throw new DataFrameException("Row length does not match number of columns: "+row.length);
+            throw new DataFrameException(
+                    "Row length does not match number of columns: "
+                    + row.length);
         }
         for(int i=0; i<columns.length; ++i){
-            if((row[i] == null) || !(columns[i].memberClass().equals(row[i].getClass()))){
+            if((row[i] == null)
+                    || !(columns[i].memberClass().equals(row[i].getClass()))){
+
+                final String colname = columns[i].name;
+                final String colmsg = ((colname != null) && !colname.isEmpty())
+                        ? "'" + colname + "'"
+                        : "index " + i;
+
                 if(row[i] == null){
-                    throw new DataFrameException("DefaultDataFrame cannot use null values");
+                    throw new DataFrameException(String.format(
+                            "DefaultDataFrame cannot use null values (at column %s)",
+                            colmsg));
+
                 }else{
                     throw new DataFrameException(String.format(
                             "Type missmatch at column %s. Expected %s but found %s",
-                            i, columns[i].memberClass().getSimpleName(),
+                            colmsg, columns[i].memberClass().getSimpleName(),
                             row[i].getClass().getSimpleName()));
-                    
+
                 }
             }
         }
     }
 
-    /**
-     * Enforces that all requirements are met in order to access a column by its name.
-     * Throws an exception in the case of failure or returns the index of the column in
-     * the case of success
-     * 
-     * @param colName The name to check
-     * @return The index of the column with the specified name 
-     */
-    private int enforceName(final String colName){
-        if((colName == null) || (colName.isEmpty())){
-            throw new DataFrameException("Arg must not be null or empty");
-        }
-        if(names == null){
-            throw new DataFrameException("Column names not set");
-        }
-        final Integer col = names.get(colName);
-        if(col == null){
-            throw new DataFrameException("Invalid column name: "+colName);
-        }
-        return col;
-    }
-
-    /**
-     * Indicates whether a given Column consists of NaN values
-     * 
-     * @param col The Column instance to check
-     * @return True if the given column is used to work with NaNs, false otherwise
-     */
-    private boolean isNaN(final Column col){
-        return !col.isNumeric();
-    }
-
-    /**
-     * Sequentially performs a flush operation on all columns. A buffer can be set to keep
-     * some extra space between the current entries and the column capacity 
-     * 
-     * @param buffer A buffer applied to each column. Using 0 (zero) will apply no buffer
-     * 	   	  at all and will shrink each column to its minimum required length
-     */
-    private void flushAll(final int buffer){
-        for(final Column col : columns){
-            col.matchLength(next+buffer);
-        }
-    }
-
-    /**
-     * Collects all annotated items from a <code>Row</code> object and returns them in an
-     * array at the correct index for further processing
-     * 
-     * @param row The row to get the items from
-     * @return An array holding the row items of the specified Row object
-     */
-    private Object[] itemsByAnnotations(final Row row){
+    @Override
+    protected Object[] itemsByAnnotations(final Row row){
         final Object[] items = new Object[columns.length];
         for(final Field field : row.getClass().getDeclaredFields()){
             final RowItem item = field.getAnnotation(RowItem.class);
@@ -1884,22 +2757,176 @@ public class DefaultDataFrame implements DataFrame {
                     throw new DataFrameException(ex.getMessage());
                 }
                 if(value == null){
-                    throw new DataFrameException("DefaultDataFrame cannot use null "
-                            + "value for " + name);
-                    
+                    throw new DataFrameException(
+                            "DefaultDataFrame cannot use null "
+                            + "value for '" + name + "'");
+
                 }
                 if(!value.getClass().equals(columns[i].memberClass())){
                     throw new DataFrameException(
-                            String.format("Row item %s uses an incorrect type. "
+                            String.format(
+                                    "Row item '%s' has an incorrect type. "
                                     + "Expected %s but found %s", name,
-                                    columns[i].memberClass().getSimpleName(), 
+                                    columns[i].memberClass().getSimpleName(),
                                     value.getClass().getSimpleName()));
-                    
+
                 }
                 items[i] = value;
             }
         }
         return items;
+    }
+
+    @Override
+    protected <T> int replace0(final int col, final String regex,
+            final IndexedValueReplacement<T> value){
+
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        if((value == null) || (regex == null) || regex.isEmpty()){
+            return 0;//NO-OP
+        }
+        final Column c = columns[col];
+        final Pattern p = Pattern.compile(regex);//cache
+        final Class<?> colClass = c.memberClass();
+        int replaced = 0;
+        for(int i=0; i<next; ++i){
+            final T currentValue = c.getGenericValue(i);
+            if(!p.matcher(String.valueOf(currentValue)).matches()){
+                continue;
+            }
+            Object replacement = null;
+            try{
+                replacement = value.replace(i, currentValue);
+            }catch(Exception ex){
+                throw new DataFrameException(
+                        String.format("Value replacement function has thrown %s",
+                                       ex.getClass().getName()), ex);
+            }
+            if(replacement == currentValue){
+                continue;
+            }
+            if(replacement == null){
+                throw new DataFrameException(
+                        "DefaultDataFrame cannot use null values");
+            }
+            if(!colClass.equals(replacement.getClass())){
+                final String msg = (c.name != null)
+                                        ? "for column '" + c.name + "'"
+                                        : "at column index " + col;
+
+                throw new DataFrameException(
+                        String.format(
+                            "Invalid replacement type %s. Expected %s but found %s",
+                             msg, c.getType(), replacement.getClass().getSimpleName()));
+
+            }
+            c.setValue(i, replacement);
+            ++replaced;
+        }
+        return replaced;
+    }
+
+    @Override
+    protected DataFrame groupOperation(final int col, final int operation){
+        if((next == -1) || (col < 0) || (col >= columns.length)){
+            throw new DataFrameException("Invalid column index: " + col);
+        }
+        final Column c = columns[col];
+        int nNumeric = 0;
+        for(int i=0; i<columns.length; ++i){
+            if((columns[i].name == null) || columns[i].name.isEmpty()){
+                throw new DataFrameException(
+                        "All columns must be labeled for group operations");
+            }
+            if((columns[i] != c) && columns[i].isNumeric()){
+                ++nNumeric;
+            }
+        }
+        final Set<Object> uniques = this.unique(col);
+        final int nUniques = uniques.size();
+        final Column[] cols = new Column[nNumeric + 1];
+        final String[] colNames = new String[nNumeric + 1];
+        cols[0] = Column.ofType(c.typeCode(), nUniques);
+        colNames[0] = c.name;
+        nNumeric = 1;
+        for(int i=0; i<columns.length; ++i){
+            if((columns[i] != c) && columns[i].isNumeric()){
+                if((operation == 3) || (operation == 4)){//average or sum op
+                    cols[nNumeric] = new DoubleColumn(nUniques);
+                }else{
+                    cols[nNumeric] = Column.ofType(columns[i].typeCode(), nUniques);
+                }
+                colNames[nNumeric] = columns[i].name;
+                ++nNumeric;
+            }
+        }
+        final DataFrame df = new DefaultDataFrame(colNames, cols);
+        final int length = cols.length;
+        int index = 0;
+        for(final Object elem : uniques){
+            final Object[] row = new Object[length];
+            row[0] = elem;
+            final DataFrame f = this.filter(c.name, elem.toString());
+            for(int i=1; i<length; ++i){
+                double value = 0.0;
+                switch(operation){
+                case 1:
+                    value = f.minimum(colNames[i]);
+                    break;
+                case 2:
+                    value = f.maximum(colNames[i]);
+                    break;
+                case 3:
+                    value = f.average(colNames[i]);
+                    break;
+                case 4:
+                    value = f.sum(colNames[i]);
+                    break;
+                default:
+                    throw new DataFrameException("Unknown group operation: "
+                                                 + operation);
+                }
+                row[i] = castToNumericType(cols[i], value);
+            }
+            df.setRow(index++, row);
+        }
+        return df;
+    }
+
+    /**
+     * Initialization method for assigning this DataFrame the specified
+     * columns and their names
+     * 
+     * @param columns The columns to use in this DataFrame instance
+     */
+    private void assignColumns(final Column[] columns){
+        if((columns == null) || (columns.length == 0)){
+            throw new DataFrameException("Argument must not be null or empty");
+        }
+        int colSize = columns[0].capacity();
+        for(int i=1; i<columns.length; ++i){
+            if(columns[i].capacity() != colSize){
+                throw new DataFrameException("Columns have deviating sizes");
+            }
+        }
+        this.columns = new Column[columns.length];
+        for(int i=0; i<columns.length; ++i){
+            final Column col = columns[i];
+            if(col.isNullable()){
+                throw new DataFrameException(
+                        "DefaultDataFrame cannot use NullableColumn instance");
+            }
+            this.columns[i] = col;
+            if((col.name != null) && !(col.name.isEmpty())){
+                if(names == null){
+                    this.names = new HashMap<String, Integer>(16);
+                }
+                this.names.put(col.name, i);
+            }
+        }
+        this.next = colSize;
     }
 
     /**
@@ -1955,42 +2982,72 @@ public class DefaultDataFrame implements DataFrame {
     }
 
     /**
+     * Casts the specified double to the corresponding Number type of
+     * the specified Column
+     * 
+     * @param col The <code>Column</code> which specifies the numeric type
+     * @param value The double value to cast
+     * @return A <code>Number</code> which has the concrete type used
+     *         by the specified Column
+     */
+    private Number castToNumericType(final Column col, final double value){
+        switch(col.typeCode()){
+        case DoubleColumn.TYPE_CODE:
+            return value;
+        case FloatColumn.TYPE_CODE:
+            return (float) value;
+        case ByteColumn.TYPE_CODE:
+            return (byte) value;
+        case ShortColumn.TYPE_CODE:
+            return (short) value;
+        case IntColumn.TYPE_CODE:
+            return (int) value;
+        case LongColumn.TYPE_CODE:
+            return (long) value;
+        default:
+            throw new DataFrameException("Unrecognized column type");
+        }
+    }
+
+    /**
      * Internal Quicksort implementation for sorting DefaultDataFrame instances.
      *
      */
     private static class QuickSort {
 
-        private static void sort(Column col, Column[] cols, int next){
+        private static void sort(final Column col, final Column[] cols,
+                final int next, final boolean ascend){
+
             switch(col.typeCode()){
             case ByteColumn.TYPE_CODE:
-                sort(((ByteColumn)col).asArray(), cols, 0, next-1);
+                sort(((ByteColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case ShortColumn.TYPE_CODE:
-                sort(((ShortColumn)col).asArray(), cols, 0, next-1);
+                sort(((ShortColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case IntColumn.TYPE_CODE:
-                sort(((IntColumn)col).asArray(), cols, 0, next-1);
+                sort(((IntColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case LongColumn.TYPE_CODE:
-                sort(((LongColumn)col).asArray(), cols, 0, next-1);
+                sort(((LongColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case StringColumn.TYPE_CODE:
-                sort(((StringColumn)col).asArray(), cols, 0, next-1);
+                sort(((StringColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case FloatColumn.TYPE_CODE:
-                sort(((FloatColumn)col).asArray(), cols, 0, next-1);
+                sort(((FloatColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case DoubleColumn.TYPE_CODE:
-                sort(((DoubleColumn)col).asArray(), cols, 0, next-1);
+                sort(((DoubleColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case CharColumn.TYPE_CODE:
-                sort(((CharColumn)col).asArray(), cols, 0, next-1);
+                sort(((CharColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case BooleanColumn.TYPE_CODE:
-                sort(((BooleanColumn)col).asArray(), cols, 0, next-1);
+                sort(((BooleanColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case BinaryColumn.TYPE_CODE:
-                sort(((BinaryColumn)col).asArray(), cols, 0, next-1);
+                sort(((BinaryColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             default:
                 //undefined
@@ -2000,201 +3057,272 @@ public class DefaultDataFrame implements DataFrame {
             }
         }
 
-        private static void sort(byte[] list, Column[] cols, int left, int right){
+        private static void sort(final byte[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final byte MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l] < MID){ ++l; }
-                while(list[r] > MID){ --r; }
+                if(ascend){
+                    while(list[l] < MID){ ++l; }
+                    while(list[r] > MID){ --r; }
+                }else{
+                    while(list[l] > MID){ ++l; }
+                    while(list[r] < MID){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(short[] list, Column[] cols, int left, int right){
+        private static void sort(final short[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final short MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l] < MID){ ++l; }
-                while(list[r] > MID){ --r; }
+                if(ascend){
+                    while(list[l] < MID){ ++l; }
+                    while(list[r] > MID){ --r; }
+                }else{
+                    while(list[l] > MID){ ++l; }
+                    while(list[r] < MID){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(int[] list, Column[] cols, int left, int right){
+        private static void sort(final int[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final int MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l] < MID){ ++l; }
-                while(list[r] > MID){ --r; }
+                if(ascend){
+                    while(list[l] < MID){ ++l; }
+                    while(list[r] > MID){ --r; }
+                }else{
+                    while(list[l] > MID){ ++l; }
+                    while(list[r] < MID){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(long[] list, Column[] cols, int left, int right){
+        private static void sort(final long[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final long MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l] < MID){ ++l; }
-                while(list[r] > MID){ --r; }
+                if(ascend){
+                    while(list[l] < MID){ ++l; }
+                    while(list[r] > MID){ --r; }
+                }else{
+                    while(list[l] > MID){ ++l; }
+                    while(list[r] < MID){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(String[] list, Column[] cols, int left, int right){
+        private static void sort(final String[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final String MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l].compareTo(MID)<0){ ++l; }
-                while(list[r].compareTo(MID)>0){ --r; }
+                if(ascend){
+                    while(list[l].compareTo(MID) < 0){ ++l; }
+                    while(list[r].compareTo(MID) > 0){ --r; }
+                }else{
+                    while(list[l].compareTo(MID) > 0){ ++l; }
+                    while(list[r].compareTo(MID) < 0){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(float[] list, Column[] cols, int left, int right){
+        private static void sort(final float[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final float MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l] < MID){ ++l; }
-                while(list[r] > MID){ --r; }
+                if(ascend){
+                    while(list[l] < MID){ ++l; }
+                    while(list[r] > MID){ --r; }
+                }else{
+                    while(list[l] > MID){ ++l; }
+                    while(list[r] < MID){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(double[] list, Column[] cols, int left, int right){
+        private static void sort(final double[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final double MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l] < MID){ ++l; }
-                while(list[r] > MID){ --r; }
+                if(ascend){
+                    while(list[l] < MID){ ++l; }
+                    while(list[r] > MID){ --r; }
+                }else{
+                    while(list[l] > MID){ ++l; }
+                    while(list[r] < MID){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(char[] list, Column[] cols, int left, int right){
+        private static void sort(final char[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final char MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l] < MID){ ++l; }
-                while(list[r] > MID){ --r; }
+                if(ascend){
+                    while(list[l] < MID){ ++l; }
+                    while(list[r] > MID){ --r; }
+                }else{
+                    while(list[l] > MID){ ++l; }
+                    while(list[r] < MID){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(boolean[] list, Column[] cols, int left, int right){
+        private static void sort(final boolean[] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final Boolean MID = list[(left+right)/2];
             int l = left;
             int r = right;
             while(l < r){
-                while(new Boolean(list[l]).compareTo(MID)<0){ ++l; }
-                while(new Boolean(list[r]).compareTo(MID)>0){ --r; }
+                if(ascend){
+                    while(Boolean.valueOf(list[l]).compareTo(MID) < 0){ ++l; }
+                    while(Boolean.valueOf(list[r]).compareTo(MID) > 0){ --r; }
+                }else{
+                    while(Boolean.valueOf(list[l]).compareTo(MID) > 0){ ++l; }
+                    while(Boolean.valueOf(list[r]).compareTo(MID) < 0){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void sort(byte[][] list, Column[] cols, int left, int right){
+        private static void sort(final byte[][] list, final Column[] cols,
+                final int left, final int right, final boolean ascend){
+
             final int MID = list[(left+right)/2].length;
             int l = left;
             int r = right;
             while(l < r){
-                while(list[l].length < MID){ ++l; }
-                while(list[r].length > MID){ --r; }
+                if(ascend){
+                    while(list[l].length < MID){ ++l; }
+                    while(list[r].length > MID){ --r; }
+                }else{
+                    while(list[l].length > MID){ ++l; }
+                    while(list[r].length < MID){ --r; }
+                }
                 if(l <= r){
                     swap(cols, l++, r--);
                 }
             }
             if(left < r){
-                sort(list, cols, left, r );
+                sort(list, cols, left, r, ascend);
             }
             if(right > l){
-                sort(list, cols, l, right);
+                sort(list, cols, l, right, ascend);
             }
         }
 
-        private static void swap(Column[] cols, int i, int j){
-            for(final Column c : cols){
-                final Object cache = c.getValueAt(i);
-                c.setValueAt(i, c.getValueAt(j));
-                c.setValueAt(j, cache);
+        private static void swap(final Column[] cols, final int i, final int j){
+            for(int k=0; k<cols.length; ++k){
+                final Column c = cols[k];
+                final Object cache = c.getValue(i);
+                c.setValue(i, c.getValue(j));
+                c.setValue(j, cache);
             }
         }
     }

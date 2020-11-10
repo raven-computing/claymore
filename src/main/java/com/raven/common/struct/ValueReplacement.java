@@ -17,30 +17,25 @@
 package com.raven.common.struct;
 
 /**
- * Abstract class all columns permitting the use of null values must extend.
+ * Functional interface for replacing values in a {@link Column} of
+ * a {@link DataFrame}. This interface defines one method for replacing a
+ * column value with a user defined value.
  * 
  * @author Phil Gaiser
- * @see NullableByteColumn
- * @see NullableShortColumn
- * @see NullableIntColumn
- * @see NullableLongColumn
- * @see NullableFloatColumn
- * @see NullableDoubleColumn
- * @see NullableStringColumn
- * @see NullableCharColumn
- * @see NullableBooleanColumn
- * @see NullableBinaryColumn
+ * @see IndexedValueReplacement
+ * @since 4.0.0
  *
  */
-public abstract class NullableColumn extends Column {
+@FunctionalInterface
+public interface ValueReplacement<T> {
 
-    @Override
-    public boolean isNullable(){
-        return true;
-    }
+    /**
+     * Replaces the specified value passed to this method with
+     * the value returned by this method 
+     * 
+     * @param value The value currently in place in the underlying column
+     * @return The new value in the underlying column
+     */
+    public T replace(T value);
 
-    @Override
-    public Object getDefaultValue(){
-        return null;
-    }
 }

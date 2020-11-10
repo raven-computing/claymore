@@ -32,7 +32,7 @@ package com.raven.common.util;
  */
 @FunctionalInterface
 public interface Actable {
-    
+
     /**
      * Runs instructions on the specified Action. Implementations of this method
      * should return normally after execution. Any occurred exceptions should be
@@ -44,5 +44,5 @@ public interface Actable {
      * @param action The <code>Action</code> to run on
      */
     public void run(Action action);
-    
+
 }

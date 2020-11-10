@@ -37,16 +37,16 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public interface TimedAction extends Action {
-    
+
     /**
-     * Returns a reference to the Chronometer used to manage a timed
+     * Returns a reference to the Chronometer used to manage the timed
      * execution for this Action
      * 
      * @return A <code>Chronometer</code> responsible for managing
      *         the timing of this Action
      */
     public Chronometer getChronometer();
-    
+
     /**
      * Suspends the calling thread and waits until the timed action
      * terminates either through successful completion or cancellation. If
@@ -54,7 +54,7 @@ public interface TimedAction extends Action {
      * immediately
      */
     public void awaitTermination();
-    
+
     /**
      * Suspends the calling thread and waits until the timed action
      * terminates either through successful completion or cancellation or the
@@ -66,5 +66,5 @@ public interface TimedAction extends Action {
      *             of time to wait
      */
     public void awaitTermination(long time, TimeUnit unit);
-    
+
 }

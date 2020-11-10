@@ -75,13 +75,13 @@ import com.raven.common.io.Serializer;
  *
  */
 public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
-    
+
     /**
      * The default scale factor of a Bloom filter. Provides suitable
      * scaling for most common scenarios
      */
     public static final int DEFAULT_SCALE_FACTOR = 2;
-    
+
     /**
      * A fast scale factor of a Bloom filter. Causes more aggressive
      * scaling and is therefore suitable for situations where the amount
@@ -91,17 +91,17 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
      * the overhead introduced by the scaling operation
      */
     public static final int FAST_SCALE_FACTOR = 4;
-    
+
     /**
      * The default tightening ratio of a Bloom filter
      */
     public static final double DEFAULT_TIGHTENING_RATIO = 0.9;
-    
+
     private Stage[] stages;
     private final int scaleFactor;
     private final double tighteningRatio;
     private final double maxError0;
-    
+
     /**
      * Constructs a new <code>ScalableBloomFilter</code> with an initial
      * capacity of 10000 elements and a maximum allowed false positive
@@ -117,7 +117,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         this(serializer, 10000, 0.01,
                 DEFAULT_SCALE_FACTOR, DEFAULT_TIGHTENING_RATIO);
     }
-    
+
     /**
      * Constructs a new <code>ScalableBloomFilter</code> with the specified
      * initial capacity and a maximum allowed false positive
@@ -136,7 +136,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         this(serializer, initialCapacity, 0.01,
                 DEFAULT_SCALE_FACTOR, DEFAULT_TIGHTENING_RATIO);
     }
-    
+
     /**
      * Constructs a new <code>ScalableBloomFilter</code> with the specified
      * initial capacity and maximum allowed false positive probability.<br>
@@ -156,7 +156,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         this(serializer, initialCapacity, maxError,
                 DEFAULT_SCALE_FACTOR, DEFAULT_TIGHTENING_RATIO);
     }
-    
+
     /**
      * Constructs a new <code>ScalableBloomFilter</code> with the specified initial
      * capacity, maximum allowed false positive probability and scale factor.<br>
@@ -178,7 +178,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         this(serializer, initialCapacity, maxError,
                 scaleFactor, DEFAULT_TIGHTENING_RATIO);
     }
-    
+
     /**
      * Constructs a new <code>ScalableBloomFilter</code> with the specified initial
      * capacity, maximum allowed false positive probability, scale factor
@@ -216,7 +216,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         this.stages = new Stage[1];
         this.stages[0] = new Stage(initialCapacity, maxError);
     }
-    
+
     /**
      * Adds the specified element to this ScalableBloomFilter. Adding an element
      * which is already in the filter will have no effect.<br>
@@ -283,7 +283,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
       //so it is definitely not in this filter
       return false;
     }
-    
+
     /**
      * Indicates whether this ScalableBloomFilter is empty. An empty filter
      * contains no elements
@@ -295,7 +295,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
     public boolean isEmpty(){
         return ((stages.length == 1) && stages[0].isEmpty());
     }
-    
+
     /**
      * Returns an estimation of the size of this ScalableBloomFilter.
      * The number of elements is approximated by putting the configured size of
@@ -314,7 +314,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         }
         return (int)size;
     }
-    
+
     /**
      * Returns the size in bytes this ScalableBloomFilter has allocated in memory
      * in order to store all elements of its current capacity. The amount of required
@@ -331,7 +331,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         }
         return size;
     }
-    
+
     /**
      * Removes all of the elements from this ScalableBloomFilter. The filter
      * will be empty after this method returns. The current capacity of this filter
@@ -343,7 +343,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         currentStage.filter.clear();
         this.stages = new Stage[]{currentStage};
     }
-    
+
     /**
      * Returns a string representation of this ScalableBloomFilter.<br>
      * This method can be used to gather informative
@@ -392,7 +392,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         sb.append(" KB)");
         return sb.toString();
     }
-    
+
     /**
      * Resizes the internal array of stages, creates a new Stage
      * object and appends it to the resized array for further usage
@@ -404,11 +404,11 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         final Stage newStage = new Stage(this,
                 (stage.capacity * scaleFactor),
                 (stage.errorRate * tighteningRatio));
-        
+
         append(newStage);
         return newStage;
     }
-    
+
     /**
      * Resizes the internal array to hold the specified Stage and appends
      * it to the array
@@ -424,34 +424,34 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         this.stages = tmp;
         stages[length] = stage;
     }
-    
+
     /**
      * Models a size immutable stage of a scalable Bloom filter allowing
      * it to grow dynamically as a whole.
      *
      */
     private static class Stage {
-        
+
         private final BitVector filter;
         private final double errorRate;
         private final int slices;
         private final int sliceSize;
         private final int capacity;
-        
+
         private Stage(final int capacity, final double errorRate){
             this.capacity = capacity;
             this.errorRate = errorRate;
             this.slices = log2(1.0 / errorRate);
             this.sliceSize = (int) Math.ceil((capacity * Math.abs(
                     Math.log(errorRate))) / (slices * 0.480453014));//const: ln(2)^2
-            
+
             final int vectorSize = (slices * sliceSize);
             this.filter = BitVector.createInitialized(vectorSize, false);
         }
-        
+
         private Stage(final ScalableBloomFilter<?> parent, final int capacity,
                 final double errorRate){
-            
+
             this.capacity = capacity;
             this.errorRate = errorRate;
             final int scaleMode = parent.scaleFactor;
@@ -466,7 +466,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
             final int vectorSize = (slices * sliceSize);
             this.filter = BitVector.createInitialized(vectorSize, false);
         }
-        
+
         /**
          * Returns a string representation of
          * this <code>ScalableBloomFilter.Stage</code>.<br>
@@ -485,7 +485,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
             sb.append(nl);
             return sb.toString();
         }
-        
+
         /**
          * Adds the specified hash to this Stage
          * 
@@ -501,7 +501,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
                 offset += sliceSize;
             }
         }
-        
+
         /**
          * Indicates whether the specified hash might have
          * been added to this Stage
@@ -523,7 +523,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
             }
             return true;
         }
-        
+
         /**
          * Returns the fill ratio of this Stage
          * 
@@ -532,7 +532,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         private double fillRatio(){
             return ((double)filter.bitsSet() / (double)filter.size());
         }
-        
+
         /**
          * Indicates whether this Stage has reached its maximum allowed capacity,
          * i.e. its fill ration
@@ -543,7 +543,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         private boolean isFull(){
             return (filter.bitsSet() > (filter.size() / 2));
         }
-        
+
         /**
          * Indicates whether this Stage is empty, i.e. all bits are
          * set to zero
@@ -554,7 +554,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
         private boolean isEmpty(){
             return (filter.bitsSet() == 0);
         }
-        
+
         /**
          * Returns the size in bytes this Stage has allocated in memory
          * 
@@ -566,7 +566,7 @@ public class ScalableBloomFilter<E> extends AbstractBloomFilter<E> {
             // + 20 bytes for internally used vars in this Stage
             return filter.asArray().length + 28;
         }
-        
+
         /**
          * Returns the estimated number of elements in this Stage
          * 

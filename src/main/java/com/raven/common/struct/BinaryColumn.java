@@ -19,13 +19,13 @@ package com.raven.common.struct;
 import java.util.Arrays;
 
 /**
- * Column holding binary data of arbitrary length.<br>
+ * A Column holding binary data of arbitrary length.<br>
  * This implementation <b>DOES NOT</b> support null values.
  * 
  * @see NullableBinaryColumn
  *
  */
-public class BinaryColumn extends Column {
+public final class BinaryColumn extends Column {
 
     /**
      * The unique type code of all <code>BinaryColumns</code>
@@ -38,7 +38,20 @@ public class BinaryColumn extends Column {
      * Constructs an empty <code>BinaryColumn</code>.
      */
     public BinaryColumn(){
-        this.entries = new byte[0][0];
+        this(0);
+    }
+
+    /**
+     * Constructs a <code>BinaryColumn</code> with the specified length.<br>
+     * All column entries are set to default binary values
+     * 
+     * @param length The initial length of the column to construct
+     */
+    public BinaryColumn(final int length){
+        this.entries = new byte[length][];
+        for(int i=0; i<length; ++i){
+            this.entries[i] = new byte[]{0};
+        }
     }
 
     /**
@@ -48,6 +61,22 @@ public class BinaryColumn extends Column {
      */
     public BinaryColumn(final String name){
         this();
+        if((name == null) || (name.isEmpty())){
+            throw new IllegalArgumentException("Column name must not be null or empty");
+        }
+        this.name = name;
+    }
+
+    /**
+     * Constructs a <code>BinaryColumn</code> with the specified label
+     * and the specified length.<br>
+     * All column entries are set to default binary values
+     * 
+     * @param name The name of the column to construct. Must not be null or empty
+     * @param length The initial length of the column to construct
+     */
+    public BinaryColumn(final String name, final int length){
+        this(length);
         if((name == null) || (name.isEmpty())){
             throw new IllegalArgumentException("Column name must not be null or empty");
         }
@@ -124,13 +153,16 @@ public class BinaryColumn extends Column {
     public Column clone(){
         final byte[][] clone = new byte[entries.length][0];
         for(int i=0; i<entries.length; ++i){
-            final byte[] data = new byte[entries[i].length];
+            final byte[] tmp = entries[i];//cache
+            final byte[] data = new byte[tmp.length];
             for(int j=0; j<data.length; ++j){
-                data[j] = entries[i][j];
+                data[j] = tmp[j];
             }
             clone[i] = data;
         }
-        return new BinaryColumn(clone);
+        return ((name != null) && !name.isEmpty())
+                ? new BinaryColumn(name, clone)
+                : new BinaryColumn(clone);
     }
 
     @Override
@@ -161,12 +193,12 @@ public class BinaryColumn extends Column {
     }
 
     @Override
-    public Object getValueAt(int index){
+    public Object getValue(int index){
         return entries[index];
     }
 
     @Override
-    public void setValueAt(int index, Object value){
+    public void setValue(int index, Object value){
         if(value == null){
             throw new IllegalArgumentException("BinaryColumn cannot use null values");
         }
@@ -183,6 +215,16 @@ public class BinaryColumn extends Column {
     }
 
     @Override
+    public String typeName(){
+        return "binary";
+    }
+
+    @Override
+    public int capacity(){
+        return entries.length;
+    }
+
+    @Override
     public boolean isNullable(){
         return false;
     }
@@ -193,8 +235,306 @@ public class BinaryColumn extends Column {
     }
 
     @Override
-    protected int capacity(){
-        return entries.length;
+    public Object getDefaultValue(){
+        return new byte[]{0};
+    }
+
+    @Override
+    public int memoryUsage(){
+        int size = 0;
+        for(int i=0; i<entries.length; ++i){
+            if(entries[i] != null){
+                size += entries[i].length;
+            }
+        }
+        return size;
+    }
+
+    @Override
+    public Column convertTo(byte typeCode){
+        Column converted = null;
+        switch(typeCode){
+        case ByteColumn.TYPE_CODE:
+            final byte[] bytes = new byte[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length > 0)){
+                    bytes[i] = entries[i][0];
+                }else{
+                    bytes[i] = 0;
+                }
+            }
+            converted = new ByteColumn(bytes);
+            break;
+        case ShortColumn.TYPE_CODE:
+            final short[] shorts = new short[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 2)){
+                    shorts[i] = (short) (((entries[i][0] & 0xff) << 8)
+                                        | (entries[i][1] & 0xff));
+                }else{
+                    shorts[i] = 0;
+                }
+            }
+            converted = new ShortColumn(shorts);
+            break;
+        case IntColumn.TYPE_CODE:
+            final int[] ints = new int[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 4)){
+                    ints[i] = (((entries[i][0] & 0xff) << 24)
+                             | ((entries[i][1] & 0xff) << 16)
+                             | ((entries[i][2] & 0xff) << 8)
+                             |  (entries[i][3] & 0xff));
+                }else{
+                    ints[i] = 0;
+                }
+            }
+            converted = new IntColumn(ints);
+            break;
+        case LongColumn.TYPE_CODE:
+            final long[] longs = new long[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 8)){
+                    longs[i] = (((entries[i][0] & 0xffL) << 56)
+                              | ((entries[i][1] & 0xffL) << 48)
+                              | ((entries[i][2] & 0xffL) << 40)
+                              | ((entries[i][3] & 0xffL) << 32)
+                              | ((entries[i][4] & 0xffL) << 24)
+                              | ((entries[i][5] & 0xffL) << 16)
+                              | ((entries[i][6] & 0xffL) << 8)
+                              |  (entries[i][7] & 0xffL));
+                }else{
+                    longs[i] = 0l;
+                }
+            }
+            converted = new LongColumn(longs);
+            break;
+        case StringColumn.TYPE_CODE:
+            final String[] strings = new String[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length > 0)){
+                    strings[i] = BitVector.wrap(entries[i]).toHexString();
+                }else{
+                    strings[i] = StringColumn.DEFAULT_VALUE;
+                }
+            }
+            converted = new StringColumn(strings);
+            break;
+        case FloatColumn.TYPE_CODE:
+            final float[] floats = new float[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 4)){
+                    floats[i] = Float.intBitsToFloat(
+                            ((entries[i][0] & 0xff) << 24)
+                          | ((entries[i][1] & 0xff) << 16)
+                          | ((entries[i][2] & 0xff) << 8)
+                          |  (entries[i][3] & 0xff));
+                }else{
+                    floats[i] = 0.0f;
+                }
+            }
+            converted = new FloatColumn(floats);
+            break;
+        case DoubleColumn.TYPE_CODE:
+            final double[] doubles = new double[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 8)){
+                    doubles[i] = Double.longBitsToDouble(
+                            ((entries[i][0] & 0xffL) << 56)
+                          | ((entries[i][1] & 0xffL) << 48)
+                          | ((entries[i][2] & 0xffL) << 40)
+                          | ((entries[i][3] & 0xffL) << 32)
+                          | ((entries[i][4] & 0xffL) << 24)
+                          | ((entries[i][5] & 0xffL) << 16)
+                          | ((entries[i][6] & 0xffL) << 8)
+                          |  (entries[i][7] & 0xffL));
+                }else{
+                    doubles[i] = 0.0;
+                }
+            }
+            converted = new DoubleColumn(doubles);
+            break;
+        case CharColumn.TYPE_CODE:
+            final char[] chars = new char[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length > 0)){
+                    chars[i] = (char) entries[i][0];
+                }else{
+                    chars[i] = CharColumn.DEFAULT_VALUE;
+                }
+            }
+            converted = new CharColumn(chars);
+            break;
+        case BooleanColumn.TYPE_CODE:
+            final boolean[] bools = new boolean[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if(entries[i] != null){
+                    boolean isZero = true;
+                    for(int j=0; j<entries[i].length; ++j){
+                        if(entries[i][j] != 0){
+                            isZero = false;
+                            break;
+                        }
+                        bools[i] = !isZero;
+                    }
+                }else{
+                    bools[i] = false;
+                }
+            }
+            converted = new BooleanColumn(bools);
+            break;
+        case BinaryColumn.TYPE_CODE:
+            converted = this.clone();
+            break;
+        case NullableByteColumn.TYPE_CODE:
+            final Byte[] bytesn = new Byte[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length > 0)){
+                    bytesn[i] = entries[i][0];
+                }else{
+                    bytesn[i] = null;
+                }
+            }
+            converted = new NullableByteColumn(bytesn);
+            break;
+        case NullableShortColumn.TYPE_CODE:
+            final Short[] shortsn = new Short[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 2)){
+                    shortsn[i] = (short) (((entries[i][0] & 0xff) << 8)
+                                         | (entries[i][1] & 0xff));
+                }else{
+                    shortsn[i] = null;
+                }
+            }
+            converted = new NullableShortColumn(shortsn);
+            break;
+        case NullableIntColumn.TYPE_CODE:
+            final Integer[] intsn = new Integer[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 4)){
+                    intsn[i] = (((entries[i][0] & 0xff) << 24)
+                              | ((entries[i][1] & 0xff) << 16)
+                              | ((entries[i][2] & 0xff) << 8)
+                              |  (entries[i][3] & 0xff));
+                }else{
+                    intsn[i] = null;
+                }
+            }
+            converted = new NullableIntColumn(intsn);
+            break;
+        case NullableLongColumn.TYPE_CODE:
+            final Long[] longsn = new Long[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 8)){
+                    longsn[i] = (((entries[i][0] & 0xffL) << 56)
+                               | ((entries[i][1] & 0xffL) << 48)
+                               | ((entries[i][2] & 0xffL) << 40)
+                               | ((entries[i][3] & 0xffL) << 32)
+                               | ((entries[i][4] & 0xffL) << 24)
+                               | ((entries[i][5] & 0xffL) << 16)
+                               | ((entries[i][6] & 0xffL) << 8)
+                               |  (entries[i][7] & 0xffL));
+                }else{
+                    longsn[i] = null;
+                }
+            }
+            converted = new NullableLongColumn(longsn);
+            break;
+        case NullableStringColumn.TYPE_CODE:
+            final String[] stringsn = new String[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length > 0)){
+                    stringsn[i] = BitVector.wrap(entries[i]).toHexString();
+                }else{
+                    stringsn[i] = null;
+                }
+            }
+            converted = new NullableStringColumn(stringsn);
+            break;
+        case NullableFloatColumn.TYPE_CODE:
+            final Float[] floatsn = new Float[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 4)){
+                    floatsn[i] = Float.intBitsToFloat(
+                            ((entries[i][0] & 0xff) << 24)
+                          | ((entries[i][1] & 0xff) << 16)
+                          | ((entries[i][2] & 0xff) << 8)
+                          |  (entries[i][3] & 0xff));
+                }else{
+                    floatsn[i] = null;
+                }
+            }
+            converted = new NullableFloatColumn(floatsn);
+            break;
+        case NullableDoubleColumn.TYPE_CODE:
+            final Double[] doublesn = new Double[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length >= 8)){
+                    doublesn[i] = Double.longBitsToDouble(
+                            ((entries[i][0] & 0xffL) << 56)
+                          | ((entries[i][1] & 0xffL) << 48)
+                          | ((entries[i][2] & 0xffL) << 40)
+                          | ((entries[i][3] & 0xffL) << 32)
+                          | ((entries[i][4] & 0xffL) << 24)
+                          | ((entries[i][5] & 0xffL) << 16)
+                          | ((entries[i][6] & 0xffL) << 8)
+                          |  (entries[i][7] & 0xffL));
+                }else{
+                    doublesn[i] = null;
+                }
+            }
+            converted = new NullableDoubleColumn(doublesn);
+            break;
+        case NullableCharColumn.TYPE_CODE:
+            final Character[] charsn = new Character[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length > 0)){
+                    charsn[i] = (char) entries[i][0];
+                }else{
+                    charsn[i] = null;
+                }
+            }
+            converted = new NullableCharColumn(charsn);
+            break;
+        case NullableBooleanColumn.TYPE_CODE:
+            final Boolean[] boolsn = new Boolean[entries.length];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length > 0)){
+                    boolean isZero = true;
+                    for(int j=0; j<entries[i].length; ++j){
+                        if(entries[i][j] != 0){
+                            isZero = false;
+                            break;
+                        }
+                        boolsn[i] = !isZero;
+                    }
+                }else{
+                    boolsn[i] = null;
+                }
+            }
+            converted = new NullableBooleanColumn(boolsn);
+            break;
+        case NullableBinaryColumn.TYPE_CODE:
+            final byte[][] binsn = new byte[entries.length][];
+            for(int i=0; i<entries.length; ++i){
+                if((entries[i] != null) && (entries[i].length > 0)){
+                    final byte[] bval = new byte[entries[i].length];
+                    for(int j=0; j<entries[i].length; ++j){
+                        bval[j] = entries[i][j];
+                    }
+                    binsn[i] = bval;
+                }else{
+                    binsn[i] = null;
+                }
+            }
+            converted = new NullableBinaryColumn(binsn);
+            break;
+        default:
+            throw new DataFrameException("Unknown column type code: " + typeCode);
+        }
+        converted.name = this.name;
+        return converted;
     }
 
     @Override

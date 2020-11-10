@@ -28,15 +28,15 @@ package com.raven.common.struct;
  * @param <V> The type of values to be used by the WritableItem
  */
 public class WritableItem<V> implements Item<V> {
-    
+
     private String key;
     private V value;
-    
+
     /**
      * Constructs a new empty <code>WritableItem</code> with no key and no value
      */
     public WritableItem(){ }
-    
+
     /**
      * Constructs a new <code>WritableItem</code> with the specified key
      * and a value of null
@@ -46,7 +46,7 @@ public class WritableItem<V> implements Item<V> {
     public WritableItem(final String key){
         this.key = key;
     }
-    
+
     /**
      * Constructs a new <code>WritableItem</code> with the specified key and value
      * 
@@ -57,7 +57,7 @@ public class WritableItem<V> implements Item<V> {
         this.key = key;
         this.value = value;
     }
-    
+
     /**
      * Gets the key of this item
      * 
@@ -67,7 +67,7 @@ public class WritableItem<V> implements Item<V> {
     public String getKey(){
         return this.key;
     }
-    
+
     /**
      * Sets the key of this item to the specified String
      * 
@@ -77,7 +77,7 @@ public class WritableItem<V> implements Item<V> {
     public void setKey(final String key){
         this.key = key;
     }
-    
+
     /**
      * Indicates whether this item has a key
      * 
@@ -88,7 +88,7 @@ public class WritableItem<V> implements Item<V> {
     public boolean hasKey(){
         return ((this.key != null) && !(this.key.isEmpty()));
     }
-    
+
     /**
      * Gets the value of this item
      * 
@@ -98,7 +98,7 @@ public class WritableItem<V> implements Item<V> {
     public V getValue(){
         return this.value;
     }
-    
+
     /**
      * Sets the value of this item to the specified value
      * 
@@ -108,7 +108,7 @@ public class WritableItem<V> implements Item<V> {
     public void setValue(final V value){
         this.value = value;
     }
-    
+
     /**
      * Indicates whether this item has a value
      * 
@@ -119,7 +119,7 @@ public class WritableItem<V> implements Item<V> {
     public boolean hasValue(){
         return (this.value != null);
     }
-    
+
     /**
      * Indicates whether this item is empty. An item is empty
      * if it neither has a key nor a value
@@ -130,7 +130,7 @@ public class WritableItem<V> implements Item<V> {
     public boolean isEmpty(){
         return !hasKey() && !hasValue();
     }
-    
+
     /**
      * Returns a String representation of this item
      * 
@@ -140,7 +140,7 @@ public class WritableItem<V> implements Item<V> {
     public String toString(){
         return key + "=" + value;
     }
-    
+
     @Override
     public int hashCode(){
         int hash = 0;

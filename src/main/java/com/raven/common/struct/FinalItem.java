@@ -28,10 +28,10 @@ package com.raven.common.struct;
  * @param <V> The type of values to be used by the FinalItem
  */
 public class FinalItem<V> implements Comparable<Item<V>> {
-    
+
     private final String key;
     private final V value;
-    
+
     /**
      * Constructs a new empty <code>FinalItem</code> with no key and no value
      */
@@ -39,7 +39,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
         this.key = null;
         this.value = null;
     }
-    
+
     /**
      * Constructs a new <code>FinalItem</code> with the specified key
      * and a value of null
@@ -50,7 +50,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
         this.key = key;
         this.value = null;
     }
-    
+
     /**
      * Constructs a new <code>FinalItem</code> with the specified key and value
      * 
@@ -61,7 +61,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
         this.key = key;
         this.value = value;
     }
-    
+
     /**
      * Gets the key of this item
      * 
@@ -70,7 +70,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
     public String getKey(){
         return this.key;
     }
-    
+
     /**
      * Indicates whether this item has a key
      * 
@@ -80,7 +80,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
     public boolean hasKey(){
         return ((this.key != null) && !(this.key.isEmpty()));
     }
-    
+
     /**
      * Gets the value of this item
      * 
@@ -89,7 +89,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
     public V getValue(){
         return this.value;
     }
-    
+
     /**
      * Indicates whether this item has a value
      * 
@@ -99,7 +99,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
     public boolean hasValue(){
         return (this.value != null);
     }
-    
+
     /**
      * Indicates whether this item is empty. An item is empty
      * if it neither has a key nor a value
@@ -109,7 +109,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
     public boolean isEmpty(){
         return !hasKey() && !hasValue();
     }
-    
+
     /**
      * Returns a String representation of this item
      * 
@@ -119,7 +119,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
     public String toString(){
         return key + "=" + value;
     }
-    
+
     @Override
     public int hashCode(){
         int hash = 0;
@@ -198,7 +198,7 @@ public class FinalItem<V> implements Comparable<Item<V>> {
         }
         return false;
     }
-    
+
     @Override
     public int compareTo(Item<V> o){
         final String k = ((o.getKey() != null) ? o.getKey() : "");

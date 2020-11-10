@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.raven-computing</groupId>
   <artifactId>claymore</artifactId>
-  <version>3.0.1</version>
+  <version>4.0.0</version>
   <name>Claymore</name>
   <description>This is the open source Claymore library which provides additional core libraries for Java</description>
   <url>https://github.com/raven-computing/claymore</url>
@@ -30,8 +30,6 @@
       <id>kilo52</id>
       <name>Phil Gaiser</name>
       <email>phil.gaiser@raven-computing.com</email>
-      <organization>Raven Computing</organization>
-      <organizationUrl>https://www.raven-computing.com</organizationUrl>
     </developer>
   </developers>
   <scm>
@@ -47,7 +45,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.12</version>
+      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

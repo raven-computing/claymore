@@ -156,7 +156,7 @@ public class CSVWriter {
             }
             //Add rows
             for(int i=0; i<df.rows(); ++i){
-                final Object[] row = df.getRowAt(i);
+                final Object[] row = df.getRow(i);
                 for(int j=0; j<cols; ++j){
                     writer.write(row[j] != null ? escape(row[j].toString()) : "null");
                     if(j<cols-1){

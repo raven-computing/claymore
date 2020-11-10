@@ -86,6 +86,10 @@ import com.raven.common.struct.StringColumn;
  * a <code>Base64</code> encoded string with
  * the {@link DataFrameSerializer#fromBase64(String)} method.
  * 
+ * <p>Asynchronous reading and writing of files is supported through the
+ * {@link DataFrameSerializer#readFileAsync(File)} and
+ * {@link DataFrameSerializer#writeFileAsync(File, DataFrame)} method respectively.
+ * 
  * @author Phil Gaiser
  * @see CSVReader
  * @see CSVWriter
@@ -118,9 +122,12 @@ public final class DataFrameSerializer {
      * 
      * @param string The Base64 encoded string representing the DataFrame to deserialize
      * @return A DataFrame from the given Base64 string
-     * @throws IOException If any errors occur during deserialization
+     * @throws SerializationException If any errors occur during deserialization
      */
-    public static DataFrame fromBase64(final String string) throws IOException{
+    public static DataFrame fromBase64(final String string) throws SerializationException{
+        if(string == null){
+            throw new SerializationException("String argument must not be null");
+        }
         return deserialize(Base64.getDecoder().decode(string));
     }
 
@@ -129,9 +136,9 @@ public final class DataFrameSerializer {
      * 
      * @param df The DataFrame to serialize to a Base64 encoded string
      * @return A Base64 encoded string representing the given DataFrame
-     * @throws IOException If any errors occur during serialization
+     * @throws SerializationException If any errors occur during serialization
      */
-    public static String toBase64(final DataFrame df) throws IOException{
+    public static String toBase64(final DataFrame df) throws SerializationException{
         return Base64.getEncoder().encodeToString(compress(serialize(df)));
     }
 
@@ -141,9 +148,12 @@ public final class DataFrameSerializer {
      * 
      * @param file The file to read. Must be a <code>.df</code> file
      * @return A DataFrame from the specified file
-     * @throws IOException If any errors occur during deserialization or file reading
+     * @throws IOException If any errors occur during file reading
+     * @throws SerializationException If any errors occur during deserialization
      */
-    public static DataFrame readFile(final String file) throws IOException{
+    public static DataFrame readFile(final String file)
+            throws IOException, SerializationException{
+
         return readFile(new File(file));
     }
 
@@ -153,9 +163,12 @@ public final class DataFrameSerializer {
      * 
      * @param file The file to read. Must be a <code>.df</code> file
      * @return A DataFrame from the specified file
-     * @throws IOException If any errors occur during deserialization or file reading
+     * @throws IOException If any errors occur during file reading
+     * @throws SerializationException If any errors occur during deserialization
      */
-    public static DataFrame readFile(final File file) throws IOException{
+    public static DataFrame readFile(final File file)
+            throws IOException, SerializationException{
+
         return readFrom(new FileInputStream(file));
     }
 
@@ -213,11 +226,11 @@ public final class DataFrameSerializer {
      * 
      * @param file The file to write the DataFrame to. Must not be null
      * @param df The DataFrame to persist. Must not be null
-     * @throws IOException If any errors occur during serialization
-     *                     or file persistence
+     * @throws IOException If any errors occur during file persistence
+     * @throws SerializationException If any errors occur during serialization
      */
     public static void writeFile(final String file, final DataFrame df)
-            throws IOException{
+            throws IOException, SerializationException{
 
         writeFile(new File(file), df);
     }
@@ -227,9 +240,12 @@ public final class DataFrameSerializer {
      * 
      * @param file The file to write the DataFrame to. Must not be null
      * @param df The DataFrame to persist. Must not be null
-     * @throws IOException If any errors occur during serialization
+     * @throws IOException If any errors occur during file persistence
+     * @throws SerializationException If any errors occur during serialization
      */
-    public static void writeFile(File file, final DataFrame df) throws IOException{
+    public static void writeFile(File file, final DataFrame df)
+            throws IOException, SerializationException{
+
         if(!file.getName().endsWith(DF_FILE_EXTENSION)){
             file = new File(file.getAbsolutePath()+DF_FILE_EXTENSION);
         }
@@ -315,11 +331,14 @@ public final class DataFrameSerializer {
      *                 Must be either {@link DataFrameSerializer#MODE_COMPRESSED}
      *                 or {@link DataFrameSerializer#MODE_UNCOMPRESSED}
      * @return A byte array representing the given DataFrame in a serialized form
-     * @throws SerializationException If any errors occur during serialization or compression
+     * @throws SerializationException If any errors occur during serialization
      */
     public static byte[] serialize(final DataFrame df, final boolean compress)
             throws SerializationException{
 
+        if(df == null){
+            throw new SerializationException("DataFrame argument must not be null");
+        }
         try{
             return (compress ? compress(serializeImplv2(df)) : serializeImplv2(df));
         }catch(Exception ex){
@@ -352,6 +371,9 @@ public final class DataFrameSerializer {
      *                                does not constitute a DataFrame
      */
     public static DataFrame deserialize(byte[] bytes) throws SerializationException{
+        if(bytes == null){
+            throw new SerializationException("Array argument must not be null");
+        }
         try{
             if((bytes[0] == DF_BYTE0) && (bytes[1] == DF_BYTE1)){
                 bytes = decompress(bytes);
@@ -364,10 +386,13 @@ public final class DataFrameSerializer {
                 throw new SerializationException(String.format("Unsupported encoding (v:%s)",
                         ((char)bytes[3])));
             }
-            return ((bytes[3] == 0x32)//is version 2
-                    ? deserializeImplv2(bytes) 
-                            : deserializeImplv1(bytes));
-
+            if(bytes[3] == 0x32){//encoding version 2
+                return deserializeImplv2(bytes);
+            }else{
+                throw new SerializationException(
+                        String.format("Unsupported encoding version (v:%s)",
+                        ((char)bytes[3])));
+            }
         }catch(Exception ex){
             //catch any unchecked exception which at
             //this point can only be caused by an invalid format
@@ -392,6 +417,9 @@ public final class DataFrameSerializer {
     public static DataFrame readFrom(final InputStream is)
             throws IOException, SerializationException{
 
+        if(is == null){
+            throw new SerializationException("InputStream argument must not be null");
+        }
         final BufferedInputStream buffer = new BufferedInputStream(is);
         byte[] bytes = new byte[2048];
         final ByteArrayOutputStream baos = new ByteArrayOutputStream(bytes.length);
@@ -430,6 +458,9 @@ public final class DataFrameSerializer {
     public static void writeTo(final OutputStream os, final DataFrame df)
             throws IOException, SerializationException{
 
+        if(os == null){
+            throw new SerializationException("OutputStream argument must not be null");
+        }
         final BufferedOutputStream buffer = new BufferedOutputStream(os);
         try{
             buffer.write(compress(serialize(df)));
@@ -685,19 +716,9 @@ public final class DataFrameSerializer {
                     final Character[] val = ((NullableCharColumn)col).asArray();
                     for(int i=0; i<rows; ++i){
                         if(val[i] == null){
-                            ptr += 2;
-                            if(ptrB >= lookupBits.length){
-                                lookupBits = resize(lookupBits, ptrB);
-                            }
-                            lookupBits[ptrB] |= (1 << (7-(li%8L)));
-                            ptrB = (int) ((++li)/8L);
+                            ptr += 1;
                         }else{
-                            final char c = val[i].charValue();
-                            bytes[++ptr] = (byte) ((c & 0xff00) >> 8);
-                            bytes[++ptr] = (byte)  (c & 0xff);
-                            if(c == '\u0000'){
-                                ptrB = (int) ((++li)/8L);
-                            }
+                            bytes[++ptr] = (byte) (val[i].charValue() & 0xff);
                         }
                     }
                     break;
@@ -872,8 +893,7 @@ public final class DataFrameSerializer {
                     bytes = ensureCapacity(bytes, ptr+(rows*2)+2);
                     final char[] val = ((CharColumn)col).asArray();
                     for(int i=0; i<rows; ++i){
-                        bytes[++ptr] = (byte) ((val[i] & 0xff00) >> 8);
-                        bytes[++ptr] = (byte)  (val[i] & 0xff);
+                        bytes[++ptr] = (byte) (val[i] & 0xff);
                     }
                     break;
                 }case BooleanColumn.TYPE_CODE:{
@@ -1121,16 +1141,11 @@ public final class DataFrameSerializer {
                 }case NullableCharColumn.TYPE_CODE:{
                     final Character[] val = new Character[rows];
                     for(int j=0; j<rows; ++j){
-                        final short s = (short) (((bytes[++ptr] & 0xff) << 8) 
-                                                | (bytes[++ptr] & 0xff));
-
-                        if(s == 0){
-                            if((lookupBits[ptrB] & (1 << (7-(li%8L)))) == 0){
-                                val[j] = '\u0000';
-                            }
-                            ptrB = (int) ((++li)/8L);
+                        final byte b = bytes[++ptr];
+                        if(b == 0){
+                            val[j] = null;
                         }else{
-                            val[j] = (char)s;
+                            val[j] = (char) b;
                         }
                     }
                     columns[i] = new NullableCharColumn(val);
@@ -1246,7 +1261,7 @@ public final class DataFrameSerializer {
                         int c0 = ptr+1;
                         while(bytes[++ptr] != 0);
                         if((ptr-c0) == 0){
-                            val[j] = StringColumn.PLACEHOLDER_EMPTY;
+                            val[j] = StringColumn.DEFAULT_VALUE;
                         }else{
                             val[j] = new String(copyBytes(bytes, c0, ptr), UTF_8);
                         }
@@ -1283,9 +1298,7 @@ public final class DataFrameSerializer {
                 }case CharColumn.TYPE_CODE:{
                     final char[] val = new char[rows];
                     for(int j=0; j<rows; ++j){
-                        val[j] = (char) ((short) (((bytes[++ptr] & 0xff) << 8)
-                                                 | (bytes[++ptr] & 0xff)));
-
+                        val[j] = (char) bytes[++ptr];
                     }
                     columns[i] = new CharColumn(val);
                     break;
@@ -1337,407 +1350,13 @@ public final class DataFrameSerializer {
     }
 
     /**
-     * Serialization to the legacy text-based <b>version 1</b> format (v1).<br>
-     * This code is not used anymore and may get removed in the future
-     */
-    @SuppressWarnings("unused")
-    private static byte[] serializeImplv1(final DataFrame df) throws SerializationException{
-        int ptr = -1;
-        byte[] bytes = new byte[2048];
-
-        //HEADER
-        for(final byte b : "{v:1;i:".getBytes()){
-            bytes[++ptr] = b;
-        }
-        if(df.isNullable()){
-            for(final byte b : "nullable;".getBytes()){
-                bytes[++ptr] = b;
-            }
-        }else{
-            for(final byte b : "default;".getBytes()){
-                bytes[++ptr] = b;
-            }
-        }
-        for(final byte b : ("r:"+df.rows()+";").getBytes()){
-            bytes[++ptr] = b;
-        }
-        for(final byte b : ("c:"+df.columns()+";").getBytes()){
-            bytes[++ptr] = b;
-        }
-        for(final byte b : ("n:").getBytes()){
-            bytes[++ptr] = b;
-        }
-        if(df.hasColumnNames()){
-            for(final String name : escapeColumnNames(df.getColumnNames())){
-                bytes = ensureCapacity(bytes, ptr+name.length()+1);
-                for(final byte b : (name+",").getBytes()){
-                    bytes[++ptr] = b;
-                }
-            }
-        }
-        bytes = ensureCapacity(bytes, ptr+3);
-        bytes[++ptr] = ';';
-        bytes[++ptr] = 't';
-        bytes[++ptr] = ':';
-        for(final Column col : df){
-            final String name = col.getClass().getSimpleName();
-            bytes = ensureCapacity(bytes, ptr+name.length()+1);
-            for(final byte b : name.getBytes()){
-                bytes[++ptr] = b;
-            }
-            bytes[++ptr] = ',';
-        }
-        bytes = ensureCapacity(bytes, ptr+2);
-        bytes[++ptr] = ';';
-        bytes[++ptr] = '}';
-        //END HEADER
-
-        //PAYLOAD
-        for(final Column col : df){
-            if((col instanceof StringColumn) 
-                    || (col instanceof CharColumn) 
-                    || (col instanceof NullableStringColumn) 
-                    || (col instanceof NullableCharColumn)){
-
-                for(int i=0; i<df.rows(); ++i){
-                    final Object o = col.getValueAt(i);
-                    final byte[] b = (o == null ? "null,".getBytes() : escapeString(o));
-                    bytes = ensureCapacity(bytes, ptr+b.length);
-                    for(int j=0; j<b.length; ++j){
-                        bytes[++ptr] = b[j];
-                    }
-                }
-            }else{
-                for(int i=0; i<df.rows(); ++i){
-                    final Object o = col.getValueAt(i);
-                    final byte[] b = (o == null 
-                            ? "null,".getBytes() 
-                                    : (o.toString()+",").getBytes());
-                    bytes = ensureCapacity(bytes, ptr+b.length);
-                    for(int j=0; j<b.length; ++j){
-                        bytes[++ptr] = b[j];
-                    }
-                }
-            }
-
-        }
-        //END PAYLOAD
-        final byte[] b = new byte[ptr+1];//trim
-        for(int i=0; i<b.length; ++i){
-            b[i] = bytes[i];
-        }
-        bytes = b;
-        return bytes;
-    }
-
-    /**
-     * Deserialization from the legacy text-based <b>version 1</b> format (v1).<br>
-     * This code is here purely for backwards compatibility and may get removed in the future.<br>
-     * 
-     * @param bytes The byte array representing the DataFrame to deserialize
-     * @return A DataFrame from the given array of bytes
-     * @throws SerializationException If any errors occur during deserialization or if the
-     * 					              given byte array does not constitute a DataFrame v1
-     */
-    private static DataFrame deserializeImplv1(final byte[] bytes) throws SerializationException{
-        if(bytes[3] != '1'){
-            throw new SerializationException("Unsupported encoding");
-        }
-        DataFrame df = null;
-        int rows = 0;
-        int cols = 0;
-        String dfType = null;
-        String[] columnNames = null;
-        String[] columnTypes = new String[0];//avoid null warning
-        Column[] columns = null;
-
-        //HEADER
-        @SuppressWarnings("unused")
-        byte b = 0;//only used in while loops. Triggers 'unused' warning
-        int i1 = 7;//'begin' pointer
-        int i2 = 6;//'end' pointer
-        while((b = bytes[++i2]) != ';');
-        byte[] tmp = copyBytes(bytes, i1, i2);
-        dfType = new String(tmp);
-        if(!dfType.equals("default") && !dfType.equals("nullable")){
-            throw new SerializationException("Unsupported DataFrame implementation");	
-        }
-        i1 = i2+3;
-        i2 += 2;
-        while((b = bytes[++i2]) != ';');
-        tmp = copyBytes(bytes, i1, i2);
-        rows = Integer.valueOf(new String(tmp));
-        i1 = i2+3;
-        i2 += 2;
-        while((b = bytes[++i2]) != ';');
-        tmp = copyBytes(bytes, i1, i2);
-        cols = Integer.valueOf(new String(tmp));
-        if(bytes[i2+3] != ';'){//has column names
-            columnNames = new String[cols];
-            i1 = i2+3;
-            i2 += 2;
-            for(int j=0; j<cols; ++j){
-                while((b = bytes[++i2]) != ',' || ((bytes[i2-1] == '<') && (bytes[i2+1] == '>')));
-                columnNames[j] = new String(copyBytes(bytes, i1, i2))
-                        .replace("<,>", ",").replace("<<>", "<");
-
-                i1 = i2+1;
-            }
-            i2 += 3;
-            i1 = i2+1;
-        }else{
-            i2 += 5;
-            i1 = i2+1;
-        }
-        if(cols > 0){//is not empty
-            columnTypes = new String[cols];
-            for(int j=0; j<cols; ++j){
-                while((b = bytes[++i2]) != ',');
-                columnTypes[j] = new String(copyBytes(bytes, i1, i2));
-                i1 = i2+1;
-            }
-            i2 += 1;
-        }
-        //END HEADER
-
-        //PAYLOAD
-        columns = new Column[cols];
-        i1 += 2;
-        if(dfType.equals("default")){
-            for(int j=0; j<cols; ++j){
-                switch(columnTypes[j]){
-                case "StringColumn":
-                    final String[] stringCol = new String[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',' || ((bytes[i2-1] == '<') 
-                                && (bytes[i2+1] == '>')));
-
-                        stringCol[k] = new String(copyBytes(bytes, i1, i2))
-                                .replace("<,>", ",").replace("<<>", "<");
-
-                        i1 = i2+1;
-                    }
-                    columns[j] = new StringColumn(stringCol);
-                    break;
-                case "ByteColumn":
-                    final byte[] byteCol = new byte[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        byteCol[k] = Byte.valueOf(new String(copyBytes(bytes, i1, i2)));
-                        i1 = i2+1;
-                    }
-                    columns[j] = new ByteColumn(byteCol);
-                    break;
-                case "ShortColumn":
-                    final short[] shortCol = new short[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        shortCol[k] = Short.valueOf(new String(copyBytes(bytes, i1, i2)));
-                        i1 = i2+1;
-                    }
-                    columns[j] = new ShortColumn(shortCol);
-                    break;
-                case "IntColumn":
-                    final int[] intCol = new int[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        intCol[k] = Integer.valueOf(new String(copyBytes(bytes, i1, i2)));
-                        i1 = i2+1;
-                    }
-                    columns[j] = new IntColumn(intCol);
-                    break;
-                case "LongColumn":
-                    final long[] longCol = new long[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        longCol[k] = Long.valueOf(new String(copyBytes(bytes, i1, i2)));
-                        i1 = i2+1;
-                    }
-                    columns[j] = new LongColumn(longCol);
-                    break;
-                case "FloatColumn":
-                    final float[] floatCol = new float[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        floatCol[k] = Float.valueOf(new String(copyBytes(bytes, i1, i2)));
-                        i1 = i2+1;
-                    }
-                    columns[j] = new FloatColumn(floatCol);
-                    break;
-                case "DoubleColumn":
-                    final double[] doubleCol = new double[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        doubleCol[k] = Double.valueOf(new String(copyBytes(bytes, i1, i2)));
-                        i1 = i2+1;
-                    }
-                    columns[j] = new DoubleColumn(doubleCol);
-                    break;
-                case "BooleanColumn":
-                    final boolean[] booleanCol = new boolean[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        booleanCol[k] = Boolean.valueOf(new String(copyBytes(bytes, i1, i2)));
-                        i1 = i2+1;
-                    }
-                    columns[j] = new BooleanColumn(booleanCol);
-                    break;
-                case "CharColumn":
-                    final char[] charCol = new char[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',' || ((bytes[i2-1] == '<') 
-                                && (bytes[i2+1] == '>')));
-
-                        charCol[k] = new String(copyBytes(bytes, i1, i2))
-                                .replace("<,>", ",").charAt(0);
-
-                        i1 = i2+1;
-                    }
-                    columns[j] = new CharColumn(charCol);
-                    break;
-                }
-            }
-        }else if(dfType.equals("nullable")){
-            for(int j=0; j<cols; ++j){
-                switch(columnTypes[j]){
-                case "NullableStringColumn":
-                    final String[] stringCol = new String[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',' || ((bytes[i2-1] == '<') 
-                                && (bytes[i2+1] == '>')));
-
-                        final String s = new String(copyBytes(bytes, i1, i2))
-                                .replace("<,>", ",").replace("<<>", "<");
-
-                        stringCol[k] = (!s.equals("null") ? s : null);
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableStringColumn(stringCol);
-                    break;
-                case "NullableByteColumn":
-                    final Byte[] byteCol = new Byte[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        final String s = new String(copyBytes(bytes, i1, i2));
-                        byteCol[k] = (!s.equals("null") ? Byte.valueOf(s) : null);
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableByteColumn(byteCol);
-                    break;
-                case "NullableShortColumn":
-                    final Short[] shortCol = new Short[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        final String s = new String(copyBytes(bytes, i1, i2));
-                        shortCol[k] = (!s.equals("null") ? Short.valueOf(s) : null);
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableShortColumn(shortCol);
-                    break;
-                case "NullableIntColumn":
-                    final Integer[] intCol = new Integer[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        final String s = new String(copyBytes(bytes, i1, i2));
-                        intCol[k] = (!s.equals("null") ? Integer.valueOf(s) : null);
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableIntColumn(intCol);
-                    break;
-                case "NullableLongColumn":
-                    final Long[] longCol = new Long[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        final String s = new String(copyBytes(bytes, i1, i2));
-                        longCol[k] = (!s.equals("null") ? Long.valueOf(s) : null);
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableLongColumn(longCol);
-                    break;
-                case "NullableFloatColumn":
-                    final Float[] floatCol = new Float[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        final String s = new String(copyBytes(bytes, i1, i2));
-                        floatCol[k] = (!s.equals("null") ? Float.valueOf(s) : null);
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableFloatColumn(floatCol);
-                    break;
-                case "NullableDoubleColumn":
-                    final Double[] doubleCol = new Double[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        final String s = new String(copyBytes(bytes, i1, i2));
-                        doubleCol[k] = (!s.equals("null") ? Double.valueOf(s) : null);
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableDoubleColumn(doubleCol);
-                    break;
-                case "NullableBooleanColumn":
-                    final Boolean[] booleanCol = new Boolean[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',');
-                        final String s = new String(copyBytes(bytes, i1, i2));
-                        booleanCol[k] = (!s.equals("null") ? Boolean.valueOf(s) : null);
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableBooleanColumn(booleanCol);
-                    break;
-                case "NullableCharColumn":
-                    final Character[] charCol = new Character[rows];
-                    for(int k=0; k<rows; ++k){
-                        while((b = bytes[++i2]) != ',' || ((bytes[i2-1] == '<')
-                                && (bytes[i2+1] == '>')));
-
-                        final String s = new String(copyBytes(bytes, i1, i2));
-                        charCol[k] = (!s.equals("null") 
-                                ? new String(copyBytes(bytes, i1, i2))
-                                        .replace("<,>", ",")
-                                        .charAt(0) 
-                                        : null);
-
-                        i1 = i2+1;
-                    }
-                    columns[j] = new NullableCharColumn(charCol);
-                    break;
-                }
-            }
-        }
-        //END PAYLOAD
-
-        switch(dfType){
-        case "default":
-            if(columns.length == 0){
-                df = new DefaultDataFrame();
-            }else if(columnNames == null){
-                df = new DefaultDataFrame(columns);
-            }else{
-                df = new DefaultDataFrame(columnNames, columns);
-            }
-            break;
-        case "nullable":
-            if(columns.length == 0){
-                df = new NullableDataFrame();
-            }else if(columnNames == null){
-                df = new NullableDataFrame(columns);
-            }else{
-                df = new NullableDataFrame(columnNames, columns);
-            }
-            break;
-        }
-        return df;
-    }
-
-    /**
      * Compresses the given array of bytes and modifies the first two bytes of the compressed 
      * instance to represent a serialized DataFrame
      * 
      * @param bytes The bytes to compress
      * @return The compressed array of bytes
-     * @throws IOException If any errors occur during compression
      */
-    private static byte[] compress(byte[] bytes) throws IOException{
+    private static byte[] compress(byte[] bytes){
         final Deflater deflater = new Deflater();
         deflater.setInput(bytes);
         final ByteArrayOutputStream os = new ByteArrayOutputStream(bytes.length);
@@ -1787,35 +1406,6 @@ public final class DataFrameSerializer {
         return os.toByteArray();
     }
 
-
-    /**
-     * Escapes special characters in all given column names
-     * 
-     * @param names The column names to potentially escape
-     * @return The escaped version of all column names
-     */
-    private static String[] escapeColumnNames(final String[] names){
-        final String[] escaped = new String[names.length];
-        for(int i=0; i<names.length; ++i){
-            escaped[i] = names[i].replace("<", "<<>");
-            escaped[i] = escaped[i].replace(",", "<,>");
-        }
-        return escaped;
-    }
-
-    /**
-     * Escapes special characters in String- and Character objects
-     * 
-     * @param obj The String- or Character object to potentially escape
-     * @return The escaped string or character encoded as a byte array
-     */
-    private static byte[] escapeString(final Object obj){
-        return obj.toString().replace("<", "<<>")
-                .replace(",", "<,>")
-                .concat(",")
-                .getBytes(UTF_8);
-    }
-
     /**
      * Ensures that the provided byte array has at least
      * the specified minimum capacity
@@ -1840,12 +1430,16 @@ public final class DataFrameSerializer {
      * @return The enlarged byte array
      */
     private static byte[] resize(final byte[] bytes, final int min){
-        int newCapacity = 0;
-        int shift = 0;
-        while(newCapacity < min){
-            newCapacity = bytes.length << ++shift;
-            if(newCapacity >= (1 << 30)){
-                newCapacity = Integer.MAX_VALUE;
+        int newCapacity = bytes.length;
+        if((min < 0) || (newCapacity == (Integer.MAX_VALUE-1))){
+            throw new SerializationException(
+                    "Array length exceeds maximum capacity");
+        }
+        while(newCapacity <= min){
+            newCapacity *= 2;
+            if(newCapacity < 1){
+                //overflow
+                newCapacity = Integer.MAX_VALUE-1;
                 break;
             }
         }

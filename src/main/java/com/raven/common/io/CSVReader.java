@@ -71,9 +71,10 @@ import com.raven.common.struct.StringColumn;
  * must be enclosed with double quotes. For that reason <i>double quotes</i> cannot
  * be used as a separator character or occur inside data values.
  * 
- * <p>If a data value in the CSV-file is nonexistent or empty, then it must have a
+ * <p>If a data value in the CSV-file is nonexistent or empty, then it should have a
  * text representation of <i>"null"</i> inside the file to read. Simply omitting
- * nonexistent or empty values, causing separators to be pasted together, is not allowed.
+ * nonexistent or empty values, causing separators to be pasted together, is considered
+ * to be a malformed line, which this implementation handles gracefully.
  * If a CSV-file contains at least one data value which is represented by the <i>"null"</i>
  * string, then the DataFrame produced by the underlying CSVReader instance will
  * be a <code>NullableDataFrame</code> and the respective values will be null.
@@ -381,7 +382,7 @@ public class CSVReader {
                     if(line.isEmpty()){//skip empty lines
                         continue;
                     }
-                    final String[] blocks = pattern.split(line, 0);
+                    final String[] blocks = pattern.split(process(line), 0);
                     final Object[] converted = new Object[blocks.length];
                     for(int i=0; i<blocks.length; ++i){
                         converted[i] = convertType(i, normalize(blocks[i]));
@@ -415,7 +416,7 @@ public class CSVReader {
                     if(line.isEmpty()){//skip empty lines
                         continue;
                     }
-                    final String[] blocks = pattern.split(line, 0);
+                    final String[] blocks = pattern.split(process(line), 0);
                     for(int i=0; i<blocks.length; ++i){
                         if(blocks[i].equals("null")){
                             blocks[i] = null;
@@ -556,6 +557,28 @@ public class CSVReader {
     }
 
     /**
+     * Processes a text line and handles malformed formats
+     * 
+     * @param line The line to process
+     * @return A processed line
+     */
+    private String process(String line){
+        if(line.startsWith(separator)){
+            line = "null" + line;
+        }
+        final String s = separator + separator;
+        while(line.contains(s)){
+            line = line.replaceAll(
+                    s,
+                    separator + "null" + separator);
+        }
+        if(line.endsWith(separator)){
+            line = line + "null";
+        }
+        return line;
+    }
+
+    /**
      * Normalizes the separator character by escaping special regex characters
      * 
      * @param separator The separator character to normalize
@@ -608,7 +631,7 @@ public class CSVReader {
     private void ensureExists() throws FileNotFoundException{
         if((!this.file.exists()) || (this.file.isDirectory())){
             throw new FileNotFoundException(String.format(
-                    "File %s does not exist or is a directory", file));
+                    "File '%s' does not exist or is a directory", file));
         }
     }
 

@@ -57,7 +57,7 @@ public class StringSerializer implements Serializer<String> {
     /**
      * Serializes the specified String to an array of bytes
      * 
-     * @param object The String object to serialize
+     * @param object The String object to serialize. Must not be null
      * @return An array of bytes which represents the specified String in a serialized form
      * @throws SerializationException If an error occurs during serialization
      * @throws NullPointerException If the specified object is null
@@ -70,7 +70,7 @@ public class StringSerializer implements Serializer<String> {
     /**
      * Deserializes the specified array of bytes to a String object
      * 
-     * @param bytes The array of bytes to deserialize
+     * @param bytes The array of bytes to deserialize. Must not be null
      * @return A String from the specified bytes
      * @throws SerializationException If an error occurs during deserialization
      * @throws NullPointerException If the specified byte array is null

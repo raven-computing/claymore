@@ -86,7 +86,7 @@ public class CSVWriterTest {
         reader.readLine();//Skip first line header
         while((line = reader.readLine()) != null){
             String[] s = pattern.split(line, 0);
-            Object[] row = df1.getRowAt(i++);
+            Object[] row = df1.getRow(i++);
             assertTrue("Row length does not match", s.length == row.length);
             for(int j=0; j<row.length; ++j){
                 assertEquals(row[j].toString(), normalize(s[j]));
@@ -104,7 +104,7 @@ public class CSVWriterTest {
         int i = 0;
         while((line = reader.readLine()) != null){
             String[] s = pattern.split(line, 0);
-            Object[] row = df1.getRowAt(i++);
+            Object[] row = df1.getRow(i++);
             assertTrue("Row length does not match", s.length == row.length);
             for(int j=0; j<row.length; ++j){
                 assertEquals(row[j].toString(), normalize(s[j]));
@@ -123,7 +123,7 @@ public class CSVWriterTest {
         int i = 0;
         while((line = reader.readLine()) != null){
             String[] s = pattern.split(line, 0);
-            Object[] row = df1.getRowAt(i++);
+            Object[] row = df1.getRow(i++);
             assertTrue("Row length does not match", s.length == row.length);
             for(int j=0; j<row.length; ++j){
                 assertEquals(row[j].toString(), normalize(s[j]));
@@ -141,7 +141,7 @@ public class CSVWriterTest {
         int i = 0;
         while((line = reader.readLine()) != null){
             String[] s = pattern.split(line, 0);
-            Object[] row = df2Nullable.getRowAt(i++);
+            Object[] row = df2Nullable.getRow(i++);
             assertTrue("Row length does not match", s.length == row.length);
             for(int j=0; j<row.length; ++j){
                 if(row[j] != null){

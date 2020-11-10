@@ -389,5 +389,4 @@ public class ObservableItem<V> implements Item<V> {
             return this.item.getValue();
         }
     }
-
 }
