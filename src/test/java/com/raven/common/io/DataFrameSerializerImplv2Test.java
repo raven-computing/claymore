@@ -27,7 +27,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.raven.common.io.DataFrameSerializer;
 import com.raven.common.struct.BinaryColumn;
 import com.raven.common.struct.BitVector;
 import com.raven.common.struct.BooleanColumn;
@@ -218,28 +217,29 @@ public class DataFrameSerializerImplv2Test {
                             + "200643f4121999a000000000000000000000000424a000000"
                             + "0000000000000000000000000000000000000000000000000"
                             + "00000000000004049c0000000000088000000010000000005"
-                            + "05040302010000000000000007020104054a05030000000000")
+                            + "05040302010000000000000007020104054a050300000000")
                               .asArray();
 
+
         truthNullableImplv2Compressed = BitVector.fromHexString(
-                               "6466ab2eb332b2ce636060600562aea4ca9254e7fc1c86e28"
-                             + "cfca2121023330f4ce5e4e7a583c54b8a3221ace48cc42210"
-                             + "9d96939f085692925f9a9403d69c949f9f939a98076666e62"
-                             + "5165582585cdc3cbc7c82fc024222407b98afbd3a5bcb0564"
-                             + "183170338832c0000f945660c00f14d1f8a68e4ece2e0c468"
-                             + "a4a063a7a40aeb269b5ad815d2d834e12438abda3e2cc59c8"
-                             + "6a9dbc08180e040e9e07c0740710338218acac2ccc4c8c505"
-                             + "976264616562f56663007000fc1306a")
-                               .asArray();
+                                        "6466ab2eb332b2ce636060600562aea4ca9254e7fc1"
+                                      + "c86e28cfca2121023330f4ce5e4e7a583c54b8a3221"
+                                      + "ace48cc422109d96939f085692925f9a9403d69c949"
+                                      + "f9f939a98076666e625165582585cdc3cbc7c82fc02"
+                                      + "4222407b98afbd3a5bcb0564183170338832c0000f9"
+                                      + "45660c00f14d1f8a68e4ece2e0c468a4a063a7a40ae"
+                                      + "b269b5ad815d2d834e12438abda3e2cc59c86a9dbc0"
+                                      + "8180e040e9e07c0740710338218acac2ccc4c8c5059"
+                                      + "76264616562f5666101b00df48306a")
+                                        .asArray();
 
 
-
-        truthNullableBase64Implv2 = "ZGarLrMyss5jYGBgBWKupMqSVOf8HIbijPyiEhAjMw9M"
-                                  + "5eTnpYPFS4oyIazkjMQiEJ2Wk58IVpKSX5qUA9aclJ+f"
-                                  + "k5qYB2Zm5iUWVYJYXNw8vHyC/AJCIkB7mK+9OlvLBWQY"
-                                  + "MXAziDLAAA+UVmDADxTR+KaOTs4uDEaKSgY6ekCusmm1"
-                                  + "rYFdLYNOEkOKvaPizFnIap28CBgOBA6eB8B0BxAzghis"
-                                  + "rCzMTIxQWXYmRhZWL1ZmMAcAD8Ewag==";
+        truthNullableBase64Implv2 = "ZGarLrMyss5jYGBgBWKupMqSVOf8HIbijPyiEhAjMw9M5e"
+                                  + "TnpYPFS4oyIazkjMQiEJ2Wk58IVpKSX5qUA9aclJ+fk5qY"
+                                  + "B2Zm5iUWVYJYXNw8vHyC/AJCIkB7mK+9OlvLBWQYMXAziD"
+                                  + "LAAA+UVmDADxTR+KaOTs4uDEaKSgY6ekCusmm1rYFdLYNO"
+                                  + "EkOKvaPizFnIap28CBgOBA6eB8B0BxAzghisrCzMTIxQWX"
+                                  + "YmRhZWL1ZmEBsA30gwag==";
 
     }
 
@@ -295,7 +295,7 @@ public class DataFrameSerializerImplv2Test {
         DataFrame res = DataFrameSerializer.deserialize(truthImplv2);
         assertFalse("DataFrame should not be empty", res.isEmpty());
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
-        assertTrue("DataFrame column count should be 9", res.columns() == 10);
+        assertTrue("DataFrame column count should be 10", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
         assertTrue("DataFrame should be of type DefaultDataFrame",
                 res instanceof DefaultDataFrame);
@@ -308,7 +308,7 @@ public class DataFrameSerializerImplv2Test {
         DataFrame res = DataFrameSerializer.deserialize(truthImplv2Compressed);
         assertFalse("DataFrame should not be empty", res.isEmpty());
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
-        assertTrue("DataFrame column count should be 9", res.columns() == 10);
+        assertTrue("DataFrame column count should be 10", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
         assertTrue("DataFrame should be of type DefaultDataFrame",
                 res instanceof DefaultDataFrame);
@@ -320,7 +320,7 @@ public class DataFrameSerializerImplv2Test {
         DataFrame res = DataFrameSerializer.deserialize(truthNullableImplv2);
         assertFalse("DataFrame should not be empty", res.isEmpty());
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
-        assertTrue("DataFrame column count should be 9", res.columns() == 10);
+        assertTrue("DataFrame column count should be 10", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
         assertTrue("DataFrame should be of type NullableDataFrame",
                 res instanceof NullableDataFrame);
@@ -333,7 +333,7 @@ public class DataFrameSerializerImplv2Test {
         DataFrame res = DataFrameSerializer.deserialize(truthNullableImplv2Compressed);
         assertFalse("DataFrame should not be empty", res.isEmpty());
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
-        assertTrue("DataFrame column count should be 9", res.columns() == 10);
+        assertTrue("DataFrame column count should be 10", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
         assertTrue("DataFrame should be of type NullableDataFrame",
                 res instanceof NullableDataFrame);
@@ -376,7 +376,7 @@ public class DataFrameSerializerImplv2Test {
         DataFrame res = DataFrameSerializer.fromBase64(truthBase64Implv2);
         assertFalse("DataFrame should not be empty", res.isEmpty());
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
-        assertTrue("DataFrame column count should be 9", res.columns() == 10);
+        assertTrue("DataFrame column count should be 10", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
         assertTrue("DataFrame should be of type DefaultDataFrame",
                 res instanceof DefaultDataFrame);
@@ -389,7 +389,7 @@ public class DataFrameSerializerImplv2Test {
         DataFrame res = DataFrameSerializer.fromBase64(truthNullableBase64Implv2);
         assertFalse("DataFrame should not be empty", res.isEmpty());
         assertTrue("DataFrame row count should be 5", res.rows() == 5);
-        assertTrue("DataFrame column count should be 9", res.columns() == 10);
+        assertTrue("DataFrame column count should be 10", res.columns() == 10);
         assertTrue("DataFrame should have column names set", res.hasColumnNames());
         assertTrue("DataFrame should be of type NullableDataFrame",
                 res instanceof NullableDataFrame);
@@ -436,6 +436,15 @@ public class DataFrameSerializerImplv2Test {
             df = DataFrameSerializer.deserialize(bytes);
         }
         assertTrue("DataFrame does not match original", df.equals(dfDefault));
+
+        DataFrame df2 = DataFrame.copy(dfDefault);
+        for(int i=0; i<df2.rows(); ++i){
+            df2.removeRow(0);
+            df.removeRow(0);
+            byte[] bytes = DataFrameSerializer.serialize(df);
+            df = DataFrameSerializer.deserialize(bytes);
+            assertTrue("DataFrame does not match changed object", df.equals(df2));
+        }
     }
     
     @Test
@@ -449,6 +458,15 @@ public class DataFrameSerializerImplv2Test {
             df = DataFrameSerializer.deserialize(bytes);
         }
         assertTrue("DataFrame does not match original", df.equals(dfNullable));
+
+        DataFrame df2 = DataFrame.copy(dfNullable);
+        for(int i=0; i<df2.rows(); ++i){
+            df2.removeRow(0);
+            df.removeRow(0);
+            byte[] bytes = DataFrameSerializer.serialize(df);
+            df = DataFrameSerializer.deserialize(bytes);
+            assertTrue("DataFrame does not match changed object", df.equals(df2));
+        }
     }
 
 }

@@ -116,6 +116,8 @@ public abstract class Column implements Cloneable {
      * @throws ArrayIndexOutOfBoundsException If the specified index is out of bounds
      * @throws ClassCastException If the Object provided cannot be cast to the type 
      * 		   this Column object can hold
+     * @throws NullPointerException If the specified Object is null and the
+     *         underlying column does not support null values
      */
     public abstract void setValue(int index, Object value);
 

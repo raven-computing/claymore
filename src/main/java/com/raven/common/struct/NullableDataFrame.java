@@ -818,8 +818,10 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             throw new DataFrameException(
                     "NullableDataFrame must use NullableColumn instance");
         }
+        boolean resized = false;
         if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
+            col.matchLength(capacity());
+            resized = true;
         }
         if(next == -1){
             this.columns = new Column[1];
@@ -830,7 +832,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 this.names.put(col.name, 0);
             }
         }else{
-            if(col.capacity() > next){
+            if(!resized && (col.capacity() > next)){
                 final int diff = (col.capacity() - next);
                 for(int i=0; i<diff; ++i){
                     addRow(new Object[columns.length]);
@@ -863,8 +865,10 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             throw new DataFrameException(
                     "NullableDataFrame must use NullableColumn instance");
         }
+        boolean resized = false;
         if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
+            col.matchLength(capacity());
+            resized = true;
         }
         if(next == -1){
             this.columns = new Column[1];
@@ -874,7 +878,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             this.names.put(colName, 0);
             col.name = colName;
         }else{
-            if(col.capacity() > next){
+            if(!resized && (col.capacity() > next)){
                 final int diff = (col.capacity() - next);
                 for(int i=0; i<diff; ++i){
                     addRow(new Object[columns.length]);
@@ -906,8 +910,10 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             throw new DataFrameException(
                     "NullableDataFrame must use NullableColumn instance");
         }
+        boolean resized = false;
         if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
+            col.matchLength(capacity());
+            resized = true;
         }
         if(next == -1){
             if(index != 0){
@@ -924,7 +930,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             if((index < 0) || (index > columns.length)){
                 throw new DataFrameException("Invalid column index: " + index);
             }
-            if(col.capacity() > next){
+            if(!resized && (col.capacity() > next)){
                 final int diff = (col.capacity() - next);
                 final Object[] nulls = new Object[columns.length];
                 for(int i=0; i<diff; ++i){
@@ -978,10 +984,12 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
         if((next == -1) || (index < 0) || (index >= columns.length)){
             throw new DataFrameException("Invalid column index: " + index);
         }
+        boolean resized = false;
         if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
+            col.matchLength(capacity());
+            resized = true;
         }
-        if(col.capacity() != next){
+        if(!resized && (col.capacity() != next)){
             throw new DataFrameException(
                     "Invalid column length. Must be of length " + next);
         }
@@ -1018,15 +1026,17 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                     "NullableDataFrame must use NullableColumn instance");
 
         }
-        if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
-        }
         if(names == null){
             this.names = new HashMap<String, Integer>(16);
         }
         final Integer i = names.get(colName);
         if(i != null){//replace
-            if(col.capacity() != next){
+            boolean resized = false;
+            if((col.capacity() == 0) && (next > 0)){
+                col.matchLength(capacity());
+                resized = true;
+            }
+            if(!resized && (col.capacity() != next)){
                 throw new DataFrameException(
                         "Invalid column length. Must be of length " + next);
             }
@@ -1677,7 +1687,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             float minFloat = Float.MAX_VALUE;
             final NullableFloatColumn columnFloat = ((NullableFloatColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnFloat.get(i) != null) && (columnFloat.get(i) < minFloat)){
+                if((columnFloat.get(i) != null) && (columnFloat.get(i) <= minFloat)){
                     minFloat = columnFloat.get(i);
                     hit = true;
                 }
@@ -1688,7 +1698,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             double minDouble = Double.MAX_VALUE;
             final NullableDoubleColumn columnDouble = ((NullableDoubleColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnDouble.get(i) != null) && (columnDouble.get(i) < minDouble)){
+                if((columnDouble.get(i) != null) && (columnDouble.get(i) <= minDouble)){
                     minDouble = columnDouble.get(i);
                     hit = true;
                 }
@@ -1699,7 +1709,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             byte minByte = Byte.MAX_VALUE;
             final NullableByteColumn columnByte = ((NullableByteColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnByte.get(i) != null) && (columnByte.get(i) < minByte)){
+                if((columnByte.get(i) != null) && (columnByte.get(i) <= minByte)){
                     minByte = columnByte.get(i);
                     hit = true;
                 }
@@ -1710,7 +1720,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             short minShort = Short.MAX_VALUE;
             final NullableShortColumn columnShort = ((NullableShortColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnShort.get(i) != null) && (columnShort.get(i) < minShort)){
+                if((columnShort.get(i) != null) && (columnShort.get(i) <= minShort)){
                     minShort = columnShort.get(i);
                     hit = true;
                 }
@@ -1721,7 +1731,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             int minInt = Integer.MAX_VALUE;
             final NullableIntColumn columnInt = ((NullableIntColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnInt.get(i) != null) && (columnInt.get(i) < minInt)){
+                if((columnInt.get(i) != null) && (columnInt.get(i) <= minInt)){
                     minInt = columnInt.get(i);
                     hit = true;
                 }
@@ -1732,7 +1742,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             long minLong = Long.MAX_VALUE;
             final NullableLongColumn columnLong = ((NullableLongColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnLong.get(i) != null) && (columnLong.get(i) < minLong)){
+                if((columnLong.get(i) != null) && (columnLong.get(i) <= minLong)){
                     minLong = columnLong.get(i);
                     hit = true;
                 }
@@ -1788,7 +1798,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 float minFloat = Float.MAX_VALUE;
                 for(int j=0; j<next; ++j){
                     final Float value = columnFloat.get(j); 
-                    if((value != null) && (value < minFloat)){
+                    if((value != null) && (value <= minFloat)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -1810,7 +1820,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 double minDouble = Double.MAX_VALUE;
                 for(int j=0; j<next; ++j){
                     final Double value = columnDouble.get(j); 
-                    if((value != null) && (value < minDouble)){
+                    if((value != null) && (value <= minDouble)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -1832,7 +1842,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 byte minByte = Byte.MAX_VALUE;
                 for(int j=0; j<next; ++j){
                     final Byte value = columnByte.get(j); 
-                    if((value != null) && (value < minByte)){
+                    if((value != null) && (value <= minByte)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -1854,7 +1864,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 short minShort = Short.MAX_VALUE;
                 for(int j=0; j<next; ++j){
                     final Short value = columnShort.get(j); 
-                    if((value != null) && (value < minShort)){
+                    if((value != null) && (value <= minShort)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -1876,7 +1886,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 int minInt = Integer.MAX_VALUE;
                 for(int j=0; j<next; ++j){
                     final Integer value = columnInt.get(j); 
-                    if((value != null) && (value < minInt)){
+                    if((value != null) && (value <= minInt)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -1898,7 +1908,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 long minLong = Long.MAX_VALUE;
                 for(int j=0; j<next; ++j){
                     final Long value = columnLong.get(j); 
-                    if((value != null) && (value < minLong)){
+                    if((value != null) && (value <= minLong)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -1957,7 +1967,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             float maxFloat = -Float.MAX_VALUE;
             final NullableFloatColumn columnFloat = ((NullableFloatColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnFloat.get(i) != null) && (columnFloat.get(i) > maxFloat)){
+                if((columnFloat.get(i) != null) && (columnFloat.get(i) >= maxFloat)){
                     maxFloat = columnFloat.get(i);
                     hit = true;
                 }
@@ -1968,7 +1978,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             double maxDouble = -Double.MAX_VALUE;
             final NullableDoubleColumn columnDouble = ((NullableDoubleColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnDouble.get(i) != null) && (columnDouble.get(i) > maxDouble)){
+                if((columnDouble.get(i) != null) && (columnDouble.get(i) >= maxDouble)){
                     maxDouble = columnDouble.get(i);
                     hit = true;
                 }
@@ -1979,7 +1989,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             byte maxByte = Byte.MIN_VALUE;
             final NullableByteColumn columnByte = ((NullableByteColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnByte.get(i) != null) && (columnByte.get(i) > maxByte)){
+                if((columnByte.get(i) != null) && (columnByte.get(i) >= maxByte)){
                     maxByte = columnByte.get(i);
                     hit = true;
                 }
@@ -1990,7 +2000,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             short maxShort = Short.MIN_VALUE;
             final NullableShortColumn columnShort = ((NullableShortColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnShort.get(i) != null) && (columnShort.get(i) > maxShort)){
+                if((columnShort.get(i) != null) && (columnShort.get(i) >= maxShort)){
                     maxShort = columnShort.get(i);
                     hit = true;
                 }
@@ -2001,7 +2011,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             int maxInt = Integer.MIN_VALUE;
             final NullableIntColumn columnInt = ((NullableIntColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnInt.get(i) != null) && (columnInt.get(i) > maxInt)){
+                if((columnInt.get(i) != null) && (columnInt.get(i) >= maxInt)){
                     maxInt = columnInt.get(i);
                     hit = true;
                 }
@@ -2012,7 +2022,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             long maxLong = Long.MIN_VALUE;
             final NullableLongColumn columnLong = ((NullableLongColumn)c);
             for(int i=0; i<next; ++i){
-                if((columnLong.get(i) != null) && (columnLong.get(i) > maxLong)){
+                if((columnLong.get(i) != null) && (columnLong.get(i) >= maxLong)){
                     maxLong = columnLong.get(i);
                     hit = true;
                 }
@@ -2068,7 +2078,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 float maxFloat = -Float.MAX_VALUE;
                 for(int j=0; j<next; ++j){
                     final Float value = columnFloat.get(j); 
-                    if((value != null) && (value > maxFloat)){
+                    if((value != null) && (value >= maxFloat)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -2090,7 +2100,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 double maxDouble = -Double.MAX_VALUE;
                 for(int j=0; j<next; ++j){
                     final Double value = columnDouble.get(j); 
-                    if((value != null) && (value > maxDouble)){
+                    if((value != null) && (value >= maxDouble)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -2112,7 +2122,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 byte maxByte = Byte.MIN_VALUE;
                 for(int j=0; j<next; ++j){
                     final Byte value = columnByte.get(j); 
-                    if((value != null) && (value > maxByte)){
+                    if((value != null) && (value >= maxByte)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -2134,7 +2144,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 short maxShort = Short.MIN_VALUE;
                 for(int j=0; j<next; ++j){
                     final Short value = columnShort.get(j); 
-                    if((value != null) && (value > maxShort)){
+                    if((value != null) && (value >= maxShort)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -2156,7 +2166,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 int maxInt = Integer.MIN_VALUE;
                 for(int j=0; j<next; ++j){
                     final Integer value = columnInt.get(j); 
-                    if((value != null) && (value > maxInt)){
+                    if((value != null) && (value >= maxInt)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -2178,7 +2188,7 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                 long maxLong = Long.MIN_VALUE;
                 for(int j=0; j<next; ++j){
                     final Long value = columnLong.get(j); 
-                    if((value != null) && (value > maxLong)){
+                    if((value != null) && (value >= maxLong)){
                         boolean taken = false;
                         for(int k=0; k<rank; ++k){
                             if(indices[k] == j){
@@ -3088,13 +3098,13 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
         case NullableFloatColumn.TYPE_CODE:
             return (float) value;
         case NullableByteColumn.TYPE_CODE:
-            return (byte) value;
+            return Double.isNaN(value) ? null : (byte) value;
         case NullableShortColumn.TYPE_CODE:
-            return (short) value;
+            return Double.isNaN(value) ? null : (short) value;
         case NullableIntColumn.TYPE_CODE:
-            return (int) value;
+            return Double.isNaN(value) ? null : (int) value;
         case NullableLongColumn.TYPE_CODE:
-            return (long) value;
+            return Double.isNaN(value) ? null : (long) value;
         default:
             throw new DataFrameException("Unrecognized column type");
         }
@@ -3113,44 +3123,50 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
 
             switch(col.typeCode()){
             case NullableByteColumn.TYPE_CODE:
-                sort(((NullableByteColumn)col).asArray(), cols, 0, 
-                        presort(((NullableByteColumn)col).asArray(), cols, next), ascend);
+                sort(((NullableByteColumn)col).asArray(), cols, 0,
+                        presortNulls(((NullableByteColumn)col).asArray(), cols, next), ascend);
                 break;
             case NullableShortColumn.TYPE_CODE:
                 sort(((NullableShortColumn)col).asArray(), cols, 0,
-                        presort(((NullableShortColumn)col).asArray(), cols, next), ascend);
+                        presortNulls(((NullableShortColumn)col).asArray(), cols, next), ascend);
                 break;
             case NullableIntColumn.TYPE_CODE:
-                sort(((NullableIntColumn)col).asArray(), cols, 0, 
-                        presort(((NullableIntColumn)col).asArray(), cols, next), ascend);
+                sort(((NullableIntColumn)col).asArray(), cols, 0,
+                        presortNulls(((NullableIntColumn)col).asArray(), cols, next), ascend);
                 break;
             case NullableLongColumn.TYPE_CODE:
-                sort(((NullableLongColumn)col).asArray(), cols, 0, 
-                        presort(((NullableLongColumn)col).asArray(), cols, next), ascend);
+                sort(((NullableLongColumn)col).asArray(), cols, 0,
+                        presortNulls(((NullableLongColumn)col).asArray(), cols, next), ascend);
                 break;
             case NullableStringColumn.TYPE_CODE:
-                sort(((NullableStringColumn)col).asArray(), cols, 0, 
-                        presort(((NullableStringColumn)col).asArray(), cols, next), ascend);
+                sort(((NullableStringColumn)col).asArray(), cols, 0,
+                        presortNulls(((NullableStringColumn)col).asArray(), cols, next), ascend);
                 break;
             case NullableFloatColumn.TYPE_CODE:
-                sort(((NullableFloatColumn)col).asArray(), cols, 0, 
-                        presort(((NullableFloatColumn)col).asArray(), cols, next), ascend);
+                final Float[] arrayF = ((NullableFloatColumn)col).asArray();
+                sort(arrayF, cols, 0,
+                        presortNaNs(arrayF, cols,
+                                presortNulls(arrayF, cols, next)), ascend);
+
                 break;
             case NullableDoubleColumn.TYPE_CODE:
-                sort(((NullableDoubleColumn)col).asArray(), cols, 0, 
-                        presort(((NullableDoubleColumn)col).asArray(), cols, next), ascend);
+                final Double[] arrayD = ((NullableDoubleColumn)col).asArray();
+                sort(arrayD, cols, 0,
+                        presortNaNs(arrayD, cols,
+                                presortNulls(arrayD, cols, next)), ascend);
+
                 break;
             case NullableCharColumn.TYPE_CODE:
-                sort(((NullableCharColumn)col).asArray(), cols, 0, 
-                        presort(((NullableCharColumn)col).asArray(), cols, next), ascend);
+                sort(((NullableCharColumn)col).asArray(), cols, 0,
+                        presortNulls(((NullableCharColumn)col).asArray(), cols, next), ascend);
                 break;
             case NullableBooleanColumn.TYPE_CODE:
-                sort(((NullableBooleanColumn)col).asArray(), cols, 0, 
-                        presort(((NullableBooleanColumn)col).asArray(), cols, next), ascend);
+                sort(((NullableBooleanColumn)col).asArray(), cols, 0,
+                        presortNulls(((NullableBooleanColumn)col).asArray(), cols, next), ascend);
                 break;
             case NullableBinaryColumn.TYPE_CODE:
-                sort(((NullableBinaryColumn)col).asArray(), cols, 0, 
-                        presort(((NullableBinaryColumn)col).asArray(), cols, next), ascend);
+                sort(((NullableBinaryColumn)col).asArray(), cols, 0,
+                        presortNulls(((NullableBinaryColumn)col).asArray(), cols, next), ascend);
                 break;
             default:
                 //undefined
@@ -3459,7 +3475,43 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             }
         }
 
-        private static int presort(final Object[] list, final Column[] cols,
+        private static int presortNaNs(final Float[] list, final Column[] cols,
+                final int right){
+
+            if(right <= -1){
+                return right;
+            }
+            int ptr = right;
+            for(int i=0; i<ptr; ++i){
+                while(Float.isNaN(list[i])){
+                    if(i == ptr){
+                        break;
+                    }
+                    swap(cols, i, ptr--);
+                }
+            }
+            return (Float.isNaN(list[ptr]) ? ptr-1 : ptr);
+        }
+
+        private static int presortNaNs(final Double[] list, final Column[] cols,
+                final int right){
+
+            if(right <= -1){
+                return right;
+            }
+            int ptr = right;
+            for(int i=0; i<ptr; ++i){
+                while(Double.isNaN(list[i])){
+                    if(i == ptr){
+                        break;
+                    }
+                    swap(cols, i, ptr--);
+                }
+            }
+            return (Double.isNaN(list[ptr]) ? ptr-1 : ptr);
+        }
+
+        private static int presortNulls(final Object[] list, final Column[] cols,
                 final int next){
 
             int ptr = next-1;

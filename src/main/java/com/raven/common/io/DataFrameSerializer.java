@@ -341,6 +341,8 @@ public final class DataFrameSerializer {
         }
         try{
             return (compress ? compress(serializeImplv2(df)) : serializeImplv2(df));
+        }catch(SerializationException ex){
+            throw ex;
         }catch(Exception ex){
             //catch any unchecked runtime exception which at this point can
             //only be caused by improper or malicious usage of the DataFrame API
@@ -393,6 +395,8 @@ public final class DataFrameSerializer {
                         String.format("Unsupported encoding version (v:%s)",
                         ((char)bytes[3])));
             }
+        }catch(SerializationException ex){
+            throw ex;
         }catch(Exception ex){
             //catch any unchecked exception which at
             //this point can only be caused by an invalid format
@@ -519,8 +523,8 @@ public final class DataFrameSerializer {
             }
         }
         bytes = ensureCapacity(bytes, ptr+cols+4);
-        for(final Column col : df){
-            bytes[++ptr] = col.typeCode();
+        for(int m=0; m<cols; ++m){
+            bytes[++ptr] = df.getColumn(m).typeCode();
         }
 
         if(df.isNullable()){//NullableDataFrame
@@ -544,7 +548,8 @@ public final class DataFrameSerializer {
             //list index pointing to the next writable bit within the lookup list
             long li = 0l;
             //PAYLOAD
-            for(final Column col : df){
+            for(int m=0; m<cols; ++m){
+                final Column col = df.getColumn(m);
                 switch(col.typeCode()){
                 case NullableByteColumn.TYPE_CODE:{
                     bytes = ensureCapacity(bytes, ptr+rows+2);
@@ -779,15 +784,17 @@ public final class DataFrameSerializer {
             final byte[] payload = bytes;
             final int payloadLength = ptr+1;
             ptr = -1;
-            //allocate bytes for the final result
-            bytes = new byte[header.length+ptrB+6+payloadLength];
-            for(int i=0; i<header.length; ++i){
-                bytes[++ptr] = header[i];
-            }
             //Number of byte blocks of the lookup list.
             //The specification requires that the lookup
             //list has a minimum length of one block
             final int bLength = (int) (((li-1)/8L)+1);
+            //allocate bytes for the final result
+            bytes = new byte[header.length + bLength + 5 + payloadLength];
+            //set header bytes
+            for(int i=0; i<header.length; ++i){
+                bytes[++ptr] = header[i];
+            }
+            //set lookup list length
             bytes[++ptr] = (byte) ((bLength & 0xff000000) >> 24);
             bytes[++ptr] = (byte) ((bLength & 0xff0000) >> 16);
             bytes[++ptr] = (byte) ((bLength & 0xff00) >> 8);
@@ -810,7 +817,8 @@ public final class DataFrameSerializer {
             //is required and we just serialize all bytes as they are to
             //the payload section
             //PAYLOAD
-            for(final Column col : df){
+            for(int m=0; m<cols; ++m){
+                final Column col = df.getColumn(m);
                 switch(col.typeCode()){
                 case ByteColumn.TYPE_CODE:{
                     bytes = ensureCapacity(bytes, ptr+rows+2);
@@ -965,6 +973,19 @@ public final class DataFrameSerializer {
                         | (bytes[++ptr] & 0xff) << 16
                         | (bytes[++ptr] & 0xff) << 8
                         | (bytes[++ptr] & 0xff));
+
+        //check the MSB of the row and col count
+        //since unsigned integers are not supported
+        if(rows < 0){
+            throw new SerializationException(
+                    "Failed DataFrame deserialization. "
+                    + "Row count exceeds maximum supported size");
+        }
+        if(cols < 0){
+            throw new SerializationException(
+                    "Failed DataFrame deserialization. "
+                    + "Column count exceeds maximum supported size");
+        }
 
         //column labels
         final String[] names = new String[cols];
@@ -1457,11 +1478,9 @@ public final class DataFrameSerializer {
      * 		   to the specified position
      */
     private static byte[] copyBytes(final byte[] bytes, final int from, final int to){
-        int j = -1;
-        final byte[] b = new byte[to-from];
-        for(int i=from; i<to; ++i){
-            b[++j] = bytes[i];
-        }
+        final int length = to - from;
+        final byte[] b = new byte[length];
+        System.arraycopy(bytes, from, b, 0, length);
         return b;
     }
 

@@ -869,8 +869,10 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
             throw new DataFrameException(
                     "DefaultDataFrame cannot use NullableColumn instance");
         }
+        boolean resized = false;
         if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
+            col.matchLength(capacity());
+            resized = true;
         }
         if(next == -1){
             this.columns = new Column[1];
@@ -881,7 +883,7 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
                 this.names.put(col.name, 0);
             }
         }else{
-            if(col.capacity() != next){
+            if(!resized && (col.capacity() != next)){
                 throw new DataFrameException(
                         "Invalid column length. Must be of length " + next);
             }
@@ -912,8 +914,10 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
             throw new DataFrameException(
                     "DefaultDataFrame cannot use NullableColumn instance");
         }
+        boolean resized = false;
         if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
+            col.matchLength(capacity());
+            resized = true;
         }
         if(next == -1){
             this.columns = new Column[1];
@@ -923,7 +927,7 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
             this.names.put(colName, 0);
             col.name = colName;
         }else{
-            if(col.capacity() != next){
+            if(!resized && (col.capacity() != next)){
                 throw new DataFrameException(
                         "Invalid column length. Must be of length " + next);
             }
@@ -953,8 +957,10 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
             throw new DataFrameException(
                     "DefaultDataFrame cannot use NullableColumn instance");
         }
+        boolean resized = false;
         if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
+            col.matchLength(capacity());
+            resized = true;
         }
         if(next == -1){
             if(index != 0){
@@ -971,7 +977,7 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
             if((index < 0) || (index > columns.length)){
                 throw new DataFrameException("Invalid column index: " + index);
             }
-            if(col.capacity() != next){
+            if(!resized && (col.capacity() != next)){
                 throw new DataFrameException(
                         "Invalid column length. Must be of length " + next);
             }
@@ -1021,10 +1027,12 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
         if((next == -1) || (index < 0) || (index >= columns.length)){
             throw new DataFrameException("Invalid column index: " + index);
         }
+        boolean resized = false;
         if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
+            col.matchLength(capacity());
+            resized = true;
         }
-        if(col.capacity() != next){
+        if(!resized && (col.capacity() != next)){
             throw new DataFrameException(
                     "Invalid column length. Must be of length " + next);
         }
@@ -1061,15 +1069,17 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
                     "DefaultDataFrame cannot use NullableColumn instance");
 
         }
-        if((col.capacity() == 0) && (next > 0)){
-            col = Column.like(col, next);
-        }
         if(names == null){
             this.names = new HashMap<String, Integer>(16);
         }
         final Integer i = names.get(colName);
         if(i != null){//replace
-            if(col.capacity() != next){
+            boolean resized = false;
+            if((col.capacity() == 0) && (next > 0)){
+                col.matchLength(capacity());
+                resized = true;
+            }
+            if(!resized && (col.capacity() != next)){
                 throw new DataFrameException(
                         "Invalid column length. Must be of length " + next);
             }
@@ -3035,10 +3045,12 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
                 sort(((StringColumn)col).asArray(), cols, 0, next-1, ascend);
                 break;
             case FloatColumn.TYPE_CODE:
-                sort(((FloatColumn)col).asArray(), cols, 0, next-1, ascend);
+                final float[] arrayF = ((FloatColumn)col).asArray();
+                sort(arrayF, cols, 0, presortNaNs(arrayF, cols, next-1), ascend);
                 break;
             case DoubleColumn.TYPE_CODE:
-                sort(((DoubleColumn)col).asArray(), cols, 0, next-1, ascend);
+                final double[] arrayD = ((DoubleColumn)col).asArray();
+                sort(arrayD, cols, 0, presortNaNs(arrayD, cols, next-1), ascend);
                 break;
             case CharColumn.TYPE_CODE:
                 sort(((CharColumn)col).asArray(), cols, 0, next-1, ascend);
@@ -3053,7 +3065,7 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
                 //undefined
                 throw new DataFrameException("Unrecognized column type: "
                         + col.getClass().getName());
-                
+
             }
         }
 
@@ -3190,6 +3202,9 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
         private static void sort(final float[] list, final Column[] cols,
                 final int left, final int right, final boolean ascend){
 
+            if(right <= -1){
+                return;
+            }
             final float MID = list[(left+right)/2];
             int l = left;
             int r = right;
@@ -3216,6 +3231,9 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
         private static void sort(final double[] list, final Column[] cols,
                 final int left, final int right, final boolean ascend){
 
+            if(right <= -1){
+                return;
+            }
             final double MID = list[(left+right)/2];
             int l = left;
             int r = right;
@@ -3324,6 +3342,36 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
                 c.setValue(i, c.getValue(j));
                 c.setValue(j, cache);
             }
+        }
+
+        private static int presortNaNs(final float[] list, final Column[] cols,
+                final int right){
+
+            int ptr = right;
+            for(int i=0; i<ptr; ++i){
+                while(Float.isNaN(list[i])){
+                    if(i == ptr){
+                        break;
+                    }
+                    swap(cols, i, ptr--);
+                }
+            }
+            return (Float.isNaN(list[ptr]) ? ptr-1 : ptr);
+        }
+
+        private static int presortNaNs(final double[] list, final Column[] cols,
+                final int right){
+
+            int ptr = right;
+            for(int i=0; i<ptr; ++i){
+                while(Double.isNaN(list[i])){
+                    if(i == ptr){
+                        break;
+                    }
+                    swap(cols, i, ptr--);
+                }
+            }
+            return (Double.isNaN(list[ptr]) ? ptr-1 : ptr);
         }
     }
 }

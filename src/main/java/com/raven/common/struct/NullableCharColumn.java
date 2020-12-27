@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A Column holding nullable char values.<br>
+ * A Column holding nullable single ASCII-character values.<br>
  * Any values not explicitly set are considered null. This class uses the primitive 
  * wrapper object as the underlying data structure.
  * 

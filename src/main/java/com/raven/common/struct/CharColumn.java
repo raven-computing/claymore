@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A Column holding char values.<br>
+ * A Column holding single ASCII-character values.<br>
  * This implementation <b>DOES NOT</b> support null values.
  * 
  * @see NullableCharColumn

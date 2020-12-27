@@ -979,14 +979,21 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
     public int removeRows(String col, String regex);
 
     /**
-     * Adds the provided column to this DataFrame. If the underlying DataFrame
-     * implementation doesn't support null values, then the size of the provided
-     * column must match the size of the already existing columns. If the underlying
-     * DataFrame implementation supports null values and has a deviating size or the
-     * provided column has a deviating size, then the DataFrame will refill all
-     * missing entries with null values to match the largest column.
+     * Adds the provided Column to this DataFrame. If the specified Column is empty,
+     * then it will be resized to match the number of rows within this DataFrame.
+     * If this DataFrame implementation supports null values, then all missing
+     * Column entries are initialized with null values. If this DataFrame
+     * implementation does not support null values, then all missing Column entries
+     * are initialized with the default value of the corresponding Column.
      * 
-     * <p>If the added column was labeled during its construction, then it will be 
+     * <p>If the underlying DataFrame implementation supports null values and has a
+     * deviating size or the provided Column has a deviating size, then the DataFrame
+     * will refill all missing entries with null values to match the largest Column.
+     * If the underlying DataFrame implementation does not support null values, then
+     * the size of the provided Column must match the size of the already existing
+     * Columns or be empty.
+     * 
+     * <p>If the added Column was labeled during its construction, then it will be 
      * referenceable by its name.
      * 
      * @param col The <code>Column</code> to add to the DataFrame. Must not be null
@@ -995,13 +1002,20 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
     public DataFrame addColumn(Column col);
 
     /**
-     * Adds the provided column to this DataFrame and assigns it the
-     * specified name. If the underlying DataFrame implementation doesn't
-     * support null values, then the size of the provided column must match the size
-     * of the already existing columns. If the underlying DataFrame implementation
-     * supports null values and has a deviating size or the provided column has a
-     * deviating size, then the DataFrame will refill all missing entries with null
-     * values to match the largest column.
+     * Adds the provided Column to this DataFrame and assigns it the
+     * specified name. If the specified Column is empty, then it will be resized to
+     * match the number of rows within this DataFrame. If this DataFrame implementation
+     * supports null values, then all missing Column entries are initialized with
+     * null values. If this DataFrame implementation does not support null values, then
+     * all missing Column entries are initialized with the default value of the
+     * corresponding Column.
+     * 
+     * <p>If the underlying DataFrame implementation supports null values and has a
+     * deviating size or the provided Column has a deviating size, then the DataFrame
+     * will refill all missing entries with null values to match the largest Column.
+     * If the underlying DataFrame implementation does not support null values, then
+     * the size of the provided Column must match the size of the already existing
+     * Columns or be empty.
      * 
      * <p>If the added column was labeled during its construction, then the
      * label will get overridden by the specified name.
@@ -1017,7 +1031,7 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
     public DataFrame addColumn(String colName, Column col);
 
     /**
-     * Removes the column at the specified index from this DataFrame
+     * Removes the Column at the specified index from this DataFrame
      * 
      * @param col The index of the <code>Column</code> to remove
      * @return The removed <code>Column</code> instance
@@ -1025,7 +1039,7 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
     public Column removeColumn(int col);
 
     /**
-     * Removes the column with the specified name from this DataFrame
+     * Removes the Column with the specified name from this DataFrame
      * 
      * @param col The name of the <code>Column</code> to remove.
      *            Must not be null or empty
@@ -1034,7 +1048,7 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
     public Column removeColumn(String col);
 
     /**
-     * Removes the specified column from this DataFrame if present. Please note that
+     * Removes the specified Column from this DataFrame if present. Please note that
      * if the specified column is not part of this DataFrame, then this
      * operation has no effect. This method matches columns by their memory reference
      * 
@@ -1045,18 +1059,25 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
     public boolean removeColumn(Column col);
 
     /**
-     * Inserts the provided column at the specified index to this DataFrame.
+     * Inserts the provided Column at the specified index to this DataFrame.
      * Shifts the column currently at that position and any subsequent columns
      * to the right (adds one to their indices).
      * 
-     * <p>If the underlying DataFrame implementation doesn't support null values,
-     * then the size of the provided column must match the size of the already
-     * existing columns. If the underlying DataFrame implementation supports null
-     * values and has a deviating size or the provided column has a deviating size,
-     * then the DataFrame will refill all missing entries with null values to match
-     * the largest column.
+     * <p>If the specified Column is empty, then it will be resized to match the
+     * number of rows within this DataFrame. If this DataFrame implementation supports
+     * null values, then all missing Column entries are initialized with null values.
+     * If this DataFrame implementation does not support null values, then all
+     * missing Column entries are initialized with the default value of
+     * the corresponding Column.
      * 
-     * <p>If the inserted column was labeled during its construction, then it will be 
+     * <p>If the underlying DataFrame implementation supports null values and has a
+     * deviating size or the provided Column has a deviating size, then the DataFrame
+     * will refill all missing entries with null values to match the largest Column.
+     * If the underlying DataFrame implementation does not support null values, then
+     * the size of the provided Column must match the size of the already existing
+     * Columns or be empty.
+     * 
+     * <p>If the inserted Column was labeled during its construction, then it will be 
      * referenceable by its name.
      * 
      * @param index The index at which the specified column is to be inserted
@@ -1066,16 +1087,23 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
     public DataFrame insertColumn(int index, Column col);
 
     /**
-     * Inserts the provided column at the specified index to this DataFrame and
+     * Inserts the provided Column at the specified index to this DataFrame and
      * assigns it the specified name. Shifts the column currently at that
      * position and any subsequent columns to the right (adds one to their indices).
      * 
-     * <p>If the underlying DataFrame implementation doesn't support null values,
-     * then the size of the provided column must match the size of the already
-     * existing columns. If the underlying DataFrame implementation supports
-     * null values and has a deviating size or the provided column has a
-     * deviating size, then the DataFrame will refill all missing entries
-     * with null values to match the largest column.
+     * <p>If the specified Column is empty, then it will be resized to match the
+     * number of rows within this DataFrame. If this DataFrame implementation supports
+     * null values, then all missing Column entries are initialized with null values.
+     * If this DataFrame implementation does not support null values, then all
+     * missing Column entries are initialized with the default value of
+     * the corresponding Column.
+     * 
+     * <p>If the underlying DataFrame implementation supports null values and has a
+     * deviating size or the provided Column has a deviating size, then the DataFrame
+     * will refill all missing entries with null values to match the largest Column.
+     * If the underlying DataFrame implementation does not support null values, then
+     * the size of the provided Column must match the size of the already existing
+     * Columns or be empty.
      * 
      * <p>If the inserted column was labeled during its construction, then the
      * label will get overridden by the specified name.
@@ -1258,10 +1286,20 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
      * Sets and replaces the {@link Column} at the specified index
      * with the provided Column.
      * 
-     * <p>If the specified column has a label associated with it, then that
-     * label will be incorporated into the DataFrame. If the provided column
-     * is not labeled, then the label of the provided column will be set to
-     * the label of the replaced column
+     * <p>If the specified Column is empty, then it will be resized to match the
+     * number of rows within this DataFrame. If this DataFrame implementation supports
+     * null values, then all missing Column entries are initialized with null values.
+     * If this DataFrame implementation does not support null values, then all
+     * missing Column entries are initialized with the default value of
+     * the corresponding Column.
+     * 
+     * <p>If the specified Column is not empty, then its size must match the size of
+     * the already existing Columns.
+     * 
+     * <p>If the specified Column has a label associated with it, then that
+     * label will be incorporated into the DataFrame. If the provided Column
+     * is not labeled, then the label of the provided Column will be set to
+     * the label of the replaced Column
      * 
      * @param index The index of the Column to set
      * @param col The Column to set at the specified index
@@ -1276,7 +1314,17 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
      * exists in this DataFrame, then the specified column will be added to it. If the
      * specified name differs from the set label of the specified column, the provided
      * string will take precedence and the name of the column will be set
-     * to the specified name
+     * to the specified name.
+     * 
+     * <p>If the specified Column is empty, then it will be resized to match the
+     * number of rows within this DataFrame. If this DataFrame implementation supports
+     * null values, then all missing Column entries are initialized with null values.
+     * If this DataFrame implementation does not support null values, then all
+     * missing Column entries are initialized with the default value of
+     * the corresponding Column.
+     * 
+     * <p>If the specified Column is not empty, then its size must match the size of
+     * the already existing Columns.
      * 
      * @param colName The name of the Column to set. Must not be null or empty
      * @param col The Column to set within this DataFrame. Must not be null
@@ -2171,7 +2219,12 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
      * values in their columns with the mutual specified name. Both DataFrames must
      * have a column with the specified name and an identical element type. All
      * columns in both DataFrame instances must be labeled by the time this method
-     * is called. The specified DataFrame may be of any type
+     * is called. The specified DataFrame may be of any type.
+     * 
+     * <p>All columns in the DataFrame argument that are also existent in
+     * this DataFrame are excluded in the result DataFrame returned by this method.
+     * Therefore, in the case of duplicate columns, the returned DataFrame only
+     * contains the corresponding column from this DataFrame
      * 
      * @param df The <code>DataFrame</code> to join with. Must not be null
      * @param col The name of the <code>Column</code>s to match values
@@ -2189,7 +2242,12 @@ public interface DataFrame extends Cloneable, Iterable<Column> {
      * DataFrames must have a column with the corresponding specified name
      * and an identical element type. All columns in both DataFrame instances must
      * be labeled by the time this method is called. The specified DataFrame may be
-     * of any type
+     * of any type.
+     * 
+     * <p>All columns in the DataFrame argument that are also existent in
+     * this DataFrame are excluded in the result DataFrame returned by this method.
+     * Therefore, in the case of duplicate columns, the returned DataFrame only
+     * contains the corresponding column from this DataFrame
      * 
      * @param df The <code>DataFrame</code> to join with. Must not be null
      * @param col1 The name of the <code>Column</code> in this DataFrame to match

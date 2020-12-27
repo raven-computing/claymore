@@ -24,28 +24,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.raven.common.struct.BooleanColumn;
-import com.raven.common.struct.ByteColumn;
-import com.raven.common.struct.CharColumn;
-import com.raven.common.struct.DataFrame;
-import com.raven.common.struct.DefaultDataFrame;
-import com.raven.common.struct.DoubleColumn;
-import com.raven.common.struct.FloatColumn;
-import com.raven.common.struct.IntColumn;
-import com.raven.common.struct.LongColumn;
-import com.raven.common.struct.NullableBooleanColumn;
-import com.raven.common.struct.NullableByteColumn;
-import com.raven.common.struct.NullableCharColumn;
-import com.raven.common.struct.NullableDataFrame;
-import com.raven.common.struct.NullableDoubleColumn;
-import com.raven.common.struct.NullableFloatColumn;
-import com.raven.common.struct.NullableIntColumn;
-import com.raven.common.struct.NullableLongColumn;
-import com.raven.common.struct.NullableShortColumn;
-import com.raven.common.struct.NullableStringColumn;
-import com.raven.common.struct.ShortColumn;
-import com.raven.common.struct.StringColumn;
-
 /**
  * Tests for static utility methods provided by the DataFrame interface.
  *
@@ -340,9 +318,13 @@ public class DataFrameUtilsTest {
         assertFalse("DataFrame should not have column names", df2.hasColumnNames());
     }
 
+
+
     //*************************************//
     //           Join operations           //
     //*************************************//
+
+
 
     @Test
     public void testJoinBothKeysSpecifiedDefaultDefault(){
@@ -544,6 +526,85 @@ public class DataFrameUtilsTest {
                 new String[]{"D","E","A","B","C"}, res.getColumnNames());
     }
 
+    @Test
+    public void testJoinOneKeySpecifiedDuplicateColumns(){
+        DataFrame df1 = new NullableDataFrame(
+                Column.nullable("A", 517,575,896,741,null,231),
+                Column.nullable("B", 1, 2, null, 4, 1, 6),
+                Column.nullable("C", "2018", "2019", null, "2020", "2018", null));
+
+        DataFrame df2 = new DefaultDataFrame(
+                Column.create("B", 1, 2, 3, 4, 5, 6),
+                Column.create("A", "AAA","BBB","CCC","DDD","EEE","FFF"),
+                Column.create("D", 53,51,54,62,41,54),
+                Column.create("C", 53,51,54,62,41,54));
+
+        DataFrame res = df1.join(df2, "B");
+        assertTrue("DataFrame should be of type NullableDataFrame",
+                res instanceof NullableDataFrame);
+
+        assertTrue("DataFrame should have 4 columns", res.columns() == 4);
+        assertTrue("DataFrame should have 5 rows", res.rows() == 5);
+        assertArrayEquals("Column names do not match",
+                new String[]{"A","B","C","D"}, res.getColumnNames());
+        
+        assertTrue("Column does not match",
+                res.getColumn("A").typeCode() == df1.getColumn("A").typeCode());
+        assertTrue("Column does not match",
+                res.getColumn("B").typeCode() == df1.getColumn("B").typeCode());
+        assertTrue("Column does not match",
+                res.getColumn("C").typeCode() == df1.getColumn("C").typeCode());
+        assertTrue("Column does not match",
+                res.getColumn("D").typeCode() == df2.getColumn("D").asNullable().typeCode());
+
+        assertTrue("DataFrame result does not match expected", res.count("B", "1") == 2);
+        assertTrue("DataFrame result does not match expected", res.count("B", "2") == 1);
+        assertTrue("DataFrame result does not match expected", res.count("B", "3") == 0);
+        assertTrue("DataFrame result does not match expected", res.count("B", "4") == 1);
+        assertTrue("DataFrame result does not match expected", res.count("B", "5") == 0);
+        assertTrue("DataFrame result does not match expected", res.count("B", "6") == 1);
+    }
+
+    @Test
+    public void testJoinBothKeySpecifiedDuplicateColumns(){
+        DataFrame df1 = new NullableDataFrame(
+                Column.nullable("A", 517,575,896,741,null,231),
+                Column.nullable("B", 1, 2, null, 4, 1, 6),
+                Column.nullable("C", "2018", "2019", null, "2020", "2018", null));
+
+        DataFrame df2 = new DefaultDataFrame(
+                Column.create("B", 53,51,54,62,41,54),
+                Column.create("A", "AAA","BBB","CCC","DDD","EEE","FFF"),
+                Column.create("E", 53,51,54,62,41,54),
+                Column.create("D", 1, 2, 3, 4, 5, 6),
+                Column.create("C", 53,51,54,62,41,54));
+
+        DataFrame res = df1.join(df2, "B", "D");
+        assertTrue("DataFrame should be of type NullableDataFrame",
+                res instanceof NullableDataFrame);
+
+        assertTrue("DataFrame should have 4 columns", res.columns() == 4);
+        assertTrue("DataFrame should have 5 rows", res.rows() == 5);
+        assertArrayEquals("Column names do not match",
+                new String[]{"A","B","C","E"}, res.getColumnNames());
+        
+        assertTrue("Column does not match",
+                res.getColumn("A").typeCode() == df1.getColumn("A").typeCode());
+        assertTrue("Column does not match",
+                res.getColumn("B").typeCode() == df1.getColumn("B").typeCode());
+        assertTrue("Column does not match",
+                res.getColumn("C").typeCode() == df1.getColumn("C").typeCode());
+        assertTrue("Column does not match",
+                res.getColumn("E").typeCode() == df2.getColumn("E").asNullable().typeCode());
+
+        assertTrue("DataFrame result does not match expected", res.count("B", "1") == 2);
+        assertTrue("DataFrame result does not match expected", res.count("B", "2") == 1);
+        assertTrue("DataFrame result does not match expected", res.count("B", "3") == 0);
+        assertTrue("DataFrame result does not match expected", res.count("B", "4") == 1);
+        assertTrue("DataFrame result does not match expected", res.count("B", "5") == 0);
+        assertTrue("DataFrame result does not match expected", res.count("B", "6") == 1);
+    }
+
     @Test(expected=DataFrameException.class)
     public void testJoinFailNoMatchingKey(){
         DataFrame df1 = new NullableDataFrame(
@@ -653,6 +714,14 @@ public class DataFrameUtilsTest {
 
         df1.join(df1);
     }
+
+
+
+    //*************************************//
+    //           Merge operation           //
+    //*************************************//
+
+
 
     @Test
     public void testMerge(){
@@ -808,6 +877,14 @@ public class DataFrameUtilsTest {
 
        DataFrame.merge(df1, df2, null);
     }
+
+
+
+    //***************************************//
+    //           Convert operation           //
+    //***************************************//
+
+
 
     @Test
     public void testConvertFromDefaultToNullable(){

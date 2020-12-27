@@ -24,20 +24,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.raven.common.struct.BooleanColumn;
-import com.raven.common.struct.ByteColumn;
-import com.raven.common.struct.CharColumn;
-import com.raven.common.struct.Column;
-import com.raven.common.struct.DataFrame;
-import com.raven.common.struct.DataFrameException;
-import com.raven.common.struct.DefaultDataFrame;
-import com.raven.common.struct.DoubleColumn;
-import com.raven.common.struct.FloatColumn;
-import com.raven.common.struct.IntColumn;
-import com.raven.common.struct.LongColumn;
-import com.raven.common.struct.ShortColumn;
-import com.raven.common.struct.StringColumn;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -664,7 +650,7 @@ public class DefaultDataFrameTest {
     
     @Test(expected=IllegalArgumentException.class)
     public void testInsertRowInvalidChar(){
-        df.addRow(new Object[]{(byte)42,(short)42,42,42l,"42",'€',42.2f,42.2d,true});
+        df.insertRow(3, new Object[]{(byte)42,(short)42,42,42l,"42",'€',42.2f,42.2d,true});
     }
 
     @Test
@@ -1920,7 +1906,7 @@ public class DefaultDataFrameTest {
         
         for(int i=0; i<count.rows(); ++i){
             assertTrue("Value should have a count of 1",
-                    count.getInt("count", 0) == 1);
+                    count.getInt("count", i) == 1);
         }
         count = df.count(8);
         assertTrue("Count should have 2 rows", count.rows() == 2);
@@ -1950,7 +1936,7 @@ public class DefaultDataFrameTest {
         
         for(int i=0; i<count.rows(); ++i){
             assertTrue("Value should have a count of 1",
-                    count.getInt("count", 0) == 1);
+                    count.getInt("count", i) == 1);
         }
         count = df.count("booleanCol");
         assertTrue("Count should have 2 rows", count.rows() == 2);
@@ -3389,7 +3375,115 @@ public class DefaultDataFrameTest {
                 "Row does not match expected values at row index 4. DataFrame is not sorted correctly",
                 toBeSorted.getBoolean("booleanCol", 4));
     }
-    
+
+    @Test
+    public void testSortAscendWithNaNs(){
+        DataFrame df = new DefaultDataFrame(
+                Column.create("A", 4, 2, 1, 5, 3),
+                Column.create("B", "4", "2", "1", "5", "3"),
+                Column.create("C", 4.0f, Float.NaN, 1.0f, Float.NaN, 3.0f),
+                Column.create("D", Double.NaN, 2.0, 1.0, 5.0, Double.NaN));
+
+        df.sortBy("C");
+        float[] valsF = ((FloatColumn)df.getColumn("C")).asArray();
+        int i = 0;
+        for(float truth : new float[]{1.0f, 3.0f, 4.0f, Float.NaN, Float.NaN}){
+            if(Float.isNaN(truth)){
+                assertTrue("DataFrame is not sorted correctly", Float.isNaN(valsF[i]));
+            }else{
+                assertTrue("DataFrame is not sorted correctly", truth == valsF[i]);
+            }
+            ++i;
+        }
+        df.sortBy("D");
+        double[] valsD = ((DoubleColumn)df.getColumn("D")).asArray();
+        i = 0;
+        for(double truth : new double[]{1.0, 2.0, 5.0, Double.NaN, Double.NaN}){
+            if(Double.isNaN(truth)){
+                assertTrue("DataFrame is not sorted correctly", Double.isNaN(valsD[i]));
+            }else{
+                assertTrue("DataFrame is not sorted correctly", truth == valsD[i]);
+            }
+            ++i;
+        }
+    }
+
+    @Test
+    public void testSortAscendOnlyNaNs(){
+        Float nanF = Float.NaN;
+        Double nanD = Double.NaN;
+        DataFrame df = new DefaultDataFrame(
+                Column.create("A", 4, 2, 1, 5, 3),
+                Column.create("B", "4", "2", "1", "5", "3"),
+                Column.create("C", nanF, nanF, nanF, nanF, nanF),
+                Column.create("D", nanD, nanD, nanD, nanD, nanD));
+
+        df.sortBy("C");
+        float[] valsF = ((FloatColumn)df.getColumn("C")).asArray();
+        for(float val : valsF){
+            assertTrue("DataFrame is not sorted correctly", Float.isNaN(val));
+        }
+        df.sortBy("D");
+        double[] valsD = ((DoubleColumn)df.getColumn("D")).asArray();
+        for(double val : valsD){
+            assertTrue("DataFrame is not sorted correctly", Double.isNaN(val));
+        }
+    }
+
+    @Test
+    public void testSortDescendWithNaNs(){
+        DataFrame df = new DefaultDataFrame(
+                Column.create("A", 4, 2, 1, 5, 3),
+                Column.create("B", "4", "2", "1", "5", "3"),
+                Column.create("C", 4.0f, Float.NaN, 1.0f, Float.NaN, 3.0f),
+                Column.create("D", Double.NaN, 2.0, 1.0, 5.0, Double.NaN));
+
+        df.sortDescendingBy("C");
+        float[] valsF = ((FloatColumn)df.getColumn("C")).asArray();
+        int i = 0;
+        for(float truth : new float[]{4.0f, 3.0f, 1.0f, Float.NaN, Float.NaN}){
+            if(Float.isNaN(truth)){
+                assertTrue("DataFrame is not sorted correctly", Float.isNaN(valsF[i]));
+            }else{
+                assertTrue("DataFrame is not sorted correctly", truth == valsF[i]);
+            }
+            ++i;
+        }
+        df.sortDescendingBy("D");
+        double[] valsD = ((DoubleColumn)df.getColumn("D")).asArray();
+        i = 0;
+        for(double truth : new double[]{5.0, 2.0, 1.0, Double.NaN, Double.NaN}){
+            if(Double.isNaN(truth)){
+                assertTrue("DataFrame is not sorted correctly", Double.isNaN(valsD[i]));
+            }else{
+                assertTrue("DataFrame is not sorted correctly", truth == valsD[i]);
+            }
+            ++i;
+        }
+    }
+
+    @Test
+    public void testSortDescendOnlyNaNs(){
+        Float nanF = Float.NaN;
+        Double nanD = Double.NaN;
+        DataFrame df = new DefaultDataFrame(
+                Column.create("A", 4, 2, 1, 5, 3),
+                Column.create("B", "4", "2", "1", "5", "3"),
+                Column.create("C", nanF, nanF, nanF, nanF, nanF),
+                Column.create("D", nanD, nanD, nanD, nanD, nanD));
+
+        df.sortDescendingBy("C");
+        float[] valsF = ((FloatColumn)df.getColumn("C")).asArray();
+        for(float val : valsF){
+            assertTrue("DataFrame is not sorted correctly", Float.isNaN(val));
+        }
+        df.sortDescendingBy("D");
+        double[] valsD = ((DoubleColumn)df.getColumn("D")).asArray();
+        for(double val : valsD){
+            assertTrue("DataFrame is not sorted correctly", Double.isNaN(val));
+        }
+    }
+
     public void testDataFrameIsSortedAscend(){
         assertArrayEquals(
                 "Row does not match expected values at row index 0. DataFrame is not sorted correctly", 

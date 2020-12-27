@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.raven.common.io.DataFrameSerializer;
 import com.raven.common.struct.BooleanColumn;
 import com.raven.common.struct.ByteColumn;
 import com.raven.common.struct.CharColumn;

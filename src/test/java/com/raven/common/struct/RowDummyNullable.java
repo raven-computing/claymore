@@ -16,9 +16,6 @@
 
 package com.raven.common.struct;
 
-import com.raven.common.struct.Row;
-import com.raven.common.struct.RowItem;
-
 /**
  * Dummy class for row annotation tests with NullableDataFrames.
  *

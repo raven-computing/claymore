@@ -29,21 +29,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.raven.common.struct.Column;
-import com.raven.common.struct.DataFrame;
-import com.raven.common.struct.DataFrameException;
-import com.raven.common.struct.DefaultDataFrame;
-import com.raven.common.struct.NullableBooleanColumn;
-import com.raven.common.struct.NullableByteColumn;
-import com.raven.common.struct.NullableCharColumn;
-import com.raven.common.struct.NullableDataFrame;
-import com.raven.common.struct.NullableDoubleColumn;
-import com.raven.common.struct.NullableFloatColumn;
-import com.raven.common.struct.NullableIntColumn;
-import com.raven.common.struct.NullableLongColumn;
-import com.raven.common.struct.NullableShortColumn;
-import com.raven.common.struct.NullableStringColumn;
-
 /**
  * Tests for NullableDataFrame implementation.
  *
@@ -667,7 +652,7 @@ public class NullableDataFrameTest {
     
     @Test(expected=IllegalArgumentException.class)
     public void testInsertRowInvalidChar(){
-        df.addRow(new Object[]{(byte)42,(short)42,null,42l,"42",'€',42.2f,null,true});
+        df.insertRow(3, new Object[]{(byte)42,(short)42,null,42l,"42",'€',42.2f,null,true});
     }
 
     @Test
@@ -2733,6 +2718,24 @@ public class NullableDataFrameTest {
     }
 
     @Test
+    public void testMinimumWithOnlyOneMaximumValue(){
+        DataFrame df = new NullableDataFrame(
+                Column.nullable("A", Byte.MAX_VALUE),
+                Column.nullable("B", Short.MAX_VALUE),
+                Column.nullable("C", Integer.MAX_VALUE),
+                Column.nullable("D", Long.MAX_VALUE),
+                Column.nullable("E", Float.MAX_VALUE),
+                Column.nullable("F", Double.MAX_VALUE));
+        
+        assertTrue("Computed minimum is wrong", df.minimum("A") == (double) Byte.MAX_VALUE);
+        assertTrue("Computed minimum is wrong", df.minimum("B") == (double) Short.MAX_VALUE);
+        assertTrue("Computed minimum is wrong", df.minimum("C") == (double) Integer.MAX_VALUE);
+        assertTrue("Computed minimum is wrong", df.minimum("D") == (double) Long.MAX_VALUE);
+        assertTrue("Computed minimum is wrong", df.minimum("E") == (double) Float.MAX_VALUE);
+        assertTrue("Computed minimum is wrong", df.minimum("F") == Double.MAX_VALUE);
+    }
+
+    @Test
     public void testMaximum(){
         assertTrue("Computed maximum should be 50", df.maximum(0) == 50.0);
         assertTrue("Computed maximum should be 51", df.maximum(1) == 51.0);
@@ -2770,6 +2773,24 @@ public class NullableDataFrameTest {
         assertTrue("Computed maximum should be NaN", Double.isNaN(df2.maximum("longs")));
         assertTrue("Computed maximum should be NaN", Double.isNaN(df2.maximum("floats")));
         assertTrue("Computed maximum should be NaN", Double.isNaN(df2.maximum("doubles")));
+    }
+
+    @Test
+    public void testMaximumWithOnlyOneMinimumValue(){
+        DataFrame df = new NullableDataFrame(
+                Column.nullable("A", Byte.MIN_VALUE),
+                Column.nullable("B", Short.MIN_VALUE),
+                Column.nullable("C", Integer.MIN_VALUE),
+                Column.nullable("D", Long.MIN_VALUE),
+                Column.nullable("E", -Float.MAX_VALUE),
+                Column.nullable("F", -Double.MAX_VALUE));
+        
+        assertTrue("Computed maximum is wrong", df.maximum("A") == (double) Byte.MIN_VALUE);
+        assertTrue("Computed maximum is wrong", df.maximum("B") == (double) Short.MIN_VALUE);
+        assertTrue("Computed maximum is wrong", df.maximum("C") == (double) Integer.MIN_VALUE);
+        assertTrue("Computed maximum is wrong", df.maximum("D") == (double) Long.MIN_VALUE);
+        assertTrue("Computed maximum is wrong", df.maximum("E") == (double) -Float.MAX_VALUE);
+        assertTrue("Computed maximum is wrong", df.maximum("F") == -Double.MAX_VALUE);
     }
 
     @Test
@@ -3550,6 +3571,135 @@ public class NullableDataFrameTest {
                 "Row does not match expected values at row index 4 (Should be null)."
                         + " DataFrame is not sorted correctly",
                         toBeSorted.getBoolean("booleanCol", 4));
+    }
+
+    @Test
+    public void testSortAscendWithNaNs(){
+        DataFrame df = new NullableDataFrame(
+                Column.nullable("A", 4, 2, 1, 5, 3),
+                Column.nullable("B", "4", "2", "1", "5", "3"),
+                Column.nullable("C", null, Float.NaN, 1.0f, Float.NaN, 3.0f),
+                Column.nullable("D", Double.NaN, null, null, 5.0, Double.NaN));
+
+        df.sortBy("C");
+        Float[] valsF = ((NullableFloatColumn)df.getColumn("C")).asArray();
+        int i = 0;
+        for(Float truth : new Float[]{1.0f, 3.0f, Float.NaN, Float.NaN, null}){
+            if(truth == null){
+                assertTrue("DataFrame is not sorted correctly", valsF[i] == null);
+            }else if(Float.isNaN(truth)){
+                assertTrue("DataFrame is not sorted correctly", Float.isNaN(valsF[i]));
+            }else{
+                assertTrue("DataFrame is not sorted correctly", truth.equals(valsF[i]));
+            }
+            ++i;
+        }
+
+        df.sortBy("D");
+        Double[] valsD = ((NullableDoubleColumn)df.getColumn("D")).asArray();
+        i = 0;
+        for(Double truth : new Double[]{5.0, Double.NaN, Double.NaN, null, null}){
+            if(truth == null){
+                assertTrue("DataFrame is not sorted correctly", valsD[i] == null);
+            }else if(Double.isNaN(truth)){
+                assertTrue("DataFrame is not sorted correctly", Double.isNaN(valsD[i]));
+            }else{
+                assertTrue("DataFrame is not sorted correctly", truth.equals(valsD[i]));
+            }
+            ++i;
+        }
+    }
+
+    @Test
+    public void testSortAscendOnlyNaNsAndNulls(){
+        Float nanF = Float.NaN;
+        Double nanD = Double.NaN;
+        DataFrame df = new NullableDataFrame(
+                Column.nullable("A", 4, 2, 1, 5, 3),
+                Column.nullable("B", "4", "2", "1", "5", "3"),
+                Column.nullable("C", nanF, null, nanF, null, nanF),
+                Column.nullable("D", null, null, nanD, nanD, nanD));
+
+        df.sortBy("C");
+        Float[] valsF = ((NullableFloatColumn)df.getColumn("C")).asArray();
+        for(int i=0; i<3; ++i){
+            assertTrue("DataFrame is not sorted correctly", Float.isNaN(valsF[i]));
+        }
+        for(int i=3; i<5; ++i){
+            assertTrue("DataFrame is not sorted correctly", valsF[i] == null);
+        }
+        df.sortBy("D");
+        Double[] valsD = ((NullableDoubleColumn)df.getColumn("D")).asArray();
+        for(int i=0; i<3; ++i){
+            assertTrue("DataFrame is not sorted correctly", Double.isNaN(valsD[i]));
+        }
+        for(int i=3; i<5; ++i){
+            assertTrue("DataFrame is not sorted correctly", valsD[i] == null);
+        }
+    }
+
+    @Test
+    public void testSortDescendWithNaNs(){
+        DataFrame df = new NullableDataFrame(
+                Column.nullable("A", 4, 2, 1, 5, 3),
+                Column.nullable("B", "4", "2", "1", "5", "3"),
+                Column.nullable("C", 4.0f, Float.NaN, 1.0f, Float.NaN, null),
+                Column.nullable("D", Double.NaN, 2.0, null, null, Double.NaN));
+
+        df.sortDescendingBy("C");
+        Float[] valsF = ((NullableFloatColumn)df.getColumn("C")).asArray();
+        int i = 0;
+        for(Float truth : new Float[]{4.0f, 1.0f, Float.NaN, Float.NaN, null}){
+            if(truth == null){
+                assertTrue("DataFrame is not sorted correctly", valsF[i] == null);
+            }else if(Float.isNaN(truth)){
+                assertTrue("DataFrame is not sorted correctly", Float.isNaN(valsF[i]));
+            }else{
+                assertTrue("DataFrame is not sorted correctly", truth.equals(valsF[i]));
+            }
+            ++i;
+        }
+        df.sortDescendingBy("D");
+        Double[] valsD = ((NullableDoubleColumn)df.getColumn("D")).asArray();
+        i = 0;
+        for(Double truth : new Double[]{2.0, Double.NaN, Double.NaN, null, null}){
+            if(truth == null){
+                assertTrue("DataFrame is not sorted correctly", valsD[i] == null);
+            }else if(Double.isNaN(truth)){
+                assertTrue("DataFrame is not sorted correctly", Double.isNaN(valsD[i]));
+            }else{
+                assertTrue("DataFrame is not sorted correctly", truth.equals(valsD[i]));
+            }
+            ++i;
+        }
+    }
+
+    @Test
+    public void testSortDescendOnlyNaNsAndNulls(){
+        Float nanF = Float.NaN;
+        Double nanD = Double.NaN;
+        DataFrame df = new NullableDataFrame(
+                Column.nullable("A", 4, 2, 1, 5, 3),
+                Column.nullable("B", "4", "2", "1", "5", "3"),
+                Column.nullable("C", null, nanF, nanF, null, null),
+                Column.nullable("D", nanD, null, nanD, nanD, null));
+
+        df.sortDescendingBy("C");
+        Float[] valsF = ((NullableFloatColumn)df.getColumn("C")).asArray();
+        for(int i=0; i<2; ++i){
+            assertTrue("DataFrame is not sorted correctly", Float.isNaN(valsF[i]));
+        }
+        for(int i=2; i<5; ++i){
+            assertTrue("DataFrame is not sorted correctly", valsF[i] == null);
+        }
+        df.sortDescendingBy("D");
+        Double[] valsD = ((NullableDoubleColumn)df.getColumn("D")).asArray();
+        for(int i=0; i<3; ++i){
+            assertTrue("DataFrame is not sorted correctly", Double.isNaN(valsD[i]));
+        }
+        for(int i=3; i<5; ++i){
+            assertTrue("DataFrame is not sorted correctly", valsD[i] == null);
+        }
     }
 
     public void testDataFrameIsSortedAscend(){

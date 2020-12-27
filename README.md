@@ -1,8 +1,8 @@
 # Claymore: Additional Core Libraries for Java
 
-[![Release](https://img.shields.io/badge/release-4.0.0-blue.svg)](https://raven-computing.com/products/claymore) [![Download](https://img.shields.io/badge/download-jar-blue.svg)](https://repo1.maven.org/maven2/com/raven-computing/claymore/4.0.0/)
+[![Release](https://img.shields.io/badge/Release-4.0.1-blue.svg)](https://raven-computing.com/products/claymore) [![Download](https://img.shields.io/badge/Download-jar-blue.svg)](https://repo1.maven.org/maven2/com/raven-computing/claymore/4.0.1/)
 
-Claymore is a set of core libraries which are often used in our Java projects. We wanted to make some of them open source in the hope that others might find them useful. The provided APIs are complementary to the native Java libraries, for example by adding support for DataFrames, readers/writers for CSV-files, a parser for command line arguments, and more.
+Claymore is a set of core libraries which are often used in our Java projects. We wanted to make some of them open source in the hope that others might find them useful. The provided APIs are complementary to the standard Java libraries, for example by adding support for DataFrames, readers/writers for CSV-files, a parser for command line arguments, and more.
 
 ## Getting Started
 
@@ -13,16 +13,16 @@ Claymore is available on the Maven central repository. In order to use Claymore 
 <dependency>
   <groupId>com.raven-computing</groupId>
   <artifactId>claymore</artifactId>
-  <version>4.0.0</version>
+  <version>4.0.1</version>
 </dependency>
 ```
 
 #### Gradle
 ```
-implementation 'com.raven-computing:claymore:4.0.0'
+implementation 'com.raven-computing:claymore:4.0.1'
 ```
 
-For more information see [search.maven.org](https://search.maven.org/artifact/com.raven-computing/claymore/4.0.0/jar).
+For more information see [search.maven.org](https://search.maven.org/artifact/com.raven-computing/claymore/4.0.1/jar).
 
 ## Compatibility
 
@@ -33,6 +33,24 @@ Claymore requires **Java 8** or higher.
 Take a look at the [Developer Documentation](https://github.com/raven-computing/claymore/wiki/Home).
 
 For further information on the APIs, please see the provided [Javadocs](https://www.javadoc.io/doc/com.raven-computing/claymore/latest/index.html).
+
+## Development
+
+If you want to change code of this library or build Claymore from source, you can do so by cloning this repository. We use Maven as our build system.
+
+### Build
+
+Use Maven to build the artifacts:
+```
+mvn package
+```
+
+### Running Tests
+
+Execute all unit test:
+```
+mvn test
+```
 
 ## License
 

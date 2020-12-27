@@ -16,6 +16,9 @@
 
 package com.raven.common.struct;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Uninstantiable utility class providing static DataFrame operations.<br>
  * This class is not a public API. Use the <code>DataFrame</code> interface
@@ -111,7 +114,7 @@ public final class DataFrameUtils {
      * a clone (copy) of each DataFrame argument to this method.
      * <p>Example:<br> 
      * <code>
-     * DataFrame merged = DataFrame.merge(DataFrame.copf(df1), DataFrame.copy(df2));
+     * DataFrame merged = DataFrame.merge(DataFrame.copy(df1), DataFrame.copy(df2));
      * </code>
      * 
      * @param dataFrames The DataFrames to be merged
@@ -129,6 +132,11 @@ public final class DataFrameUtils {
         boolean hasNullable = false;
         boolean hasNames = false;
         for(int i=0; i<dataFrames.length; ++i){
+            if(dataFrames[i] == null){
+                throw new DataFrameException(
+                        "Invalid argument. DataFrame at index "
+                        + i + " must not be null");
+            }
             cols += dataFrames[i].columns();
             if(dataFrames[i] == null){
                 throw new DataFrameException(
@@ -440,7 +448,10 @@ public final class DataFrameUtils {
      * DataFrames must have a column with the corresponding specified name
      * and an identical element type. All columns in both DataFrame instances must
      * be labeled by the time this method is called. The specified DataFrames may be
-     * of any types
+     * of any type.
+     * 
+     * <p>All columns in the second DataFrame argument that are also existent in the
+     * first, are excluded in the DataFrame returned by this method
      * 
      * @param df1 The first <code>DataFrame</code> to join. Must not be null
      * @param col1 The name of the <code>Column</code> in the first DataFrame argument
@@ -486,26 +497,28 @@ public final class DataFrameUtils {
                 .equals(df2.getColumn(col2).memberClass().getSimpleName())){
 
             throw new DataFrameException(
-                    String.format("Column '%s' of DataFrame argument has "
+                    String.format("Column '%s' in DataFrame argument has "
                             + "a different type. "
                             + "Expected %s but found %s",
                             df2.getColumn(col2).getName(),
                             df1.getColumn(col1).getType(), 
                             df2.getColumn(col2).getType()));
         }
-        int matches = 0;
+        //create a set holding the names of all columns from df2
+        //that should be bypassed in the result because they already exist in df1
+        final Collection<String> duplicates = new HashSet<>();
         final String[] n = df2.getColumnNames();
         for(int i=0; i<n.length; ++i){
             if(df1.hasColumn(n[i])){
-                ++matches;
+                duplicates.add(n[i]);
             }
         }
-        if(matches > 1){
-            throw new DataFrameException(
-                    "DataFrame argument has more than one matching column");
-        }
+        //add the specified column name to make sure
+        //it is not included in the below computations
+        duplicates.add(col2);
         df1.flush();
         df2.flush();
+        //find the elements common to both DataFrames
         final DataFrame intersec = df1.getColumns(col1).intersectionRows(
                 df2.getColumns(col2));
 
@@ -514,34 +527,45 @@ public final class DataFrameUtils {
                 ? new NullableDataFrame()
                 : new DefaultDataFrame();
 
+        //add all columns from df1
         for(int i=0; i<df1.columns(); ++i){
             final Column c = Column.ofType(df1.getColumn(i).typeCode());
             res.addColumn(df1.getColumn(i).name, useNullable ? c.asNullable() : c);
         }
+        //add all columns from df2 as long as they are not already in df1
         for(int i=0; i<df2.columns(); ++i){
             final Column col = df2.getColumn(i);
-            if(!col2.equals(col.name)){
+            //if the column is in the collection, then it
+            //is either 'col2' or another duplicate, so it is skipped
+            if(!duplicates.contains(col.name)){
                 final Column c = Column.ofType(col.typeCode());
                 res.addColumn(col.name, useNullable ? c.asNullable() : c);
             }
         }
+        //iterate over all common elements and add all rows to the result
+        //from both DataFrames that match the common element
+        //in their respective key column
         for(int i=0; i<intersec.rows(); ++i){
             final String filterKey = String.valueOf(
                     intersec.getColumn(0).getValue(i));
 
             final DataFrame filter1 = df1.filter(col1, filterKey);
             final DataFrame filter2 = df2.filter(col2, filterKey);
-            filter2.removeColumn(col2);
+            //remove 'col2' and any column already existent in df1
+            for(final String s : duplicates){
+                filter2.removeColumn(s);
+            }
             final int lengthCol1 = df1.columns();
-            final int lengthCol2 = df2.columns();
-            final int lengthRow = lengthCol1 + lengthCol2 - 1;
+            final int lengthCol2 = df2.columns() - duplicates.size();
+            final int lengthRow = lengthCol1 + lengthCol2;
+            //reuse the row as a carrier to avoid reallocation
+            final Object[] row = new Object[lengthRow];
             for(int j=0; j<filter1.rows(); ++j){
                 for(int k=0; k<filter2.rows(); ++k){
-                    final Object[] row = new Object[lengthRow];
                     for(int l=0; l<lengthCol1; ++l){
                         row[l] = filter1.getColumn(l).getValue(j);
                     }
-                    for(int l=0; l<lengthCol2-1; ++l){
+                    for(int l=0; l<lengthCol2; ++l){
                         row[lengthCol1+l] = filter2.getColumn(l).getValue(k);
                     }
                     res.addRow(row);
