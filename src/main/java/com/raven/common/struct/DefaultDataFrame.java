@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2020 Raven Computing
+ * Copyright (C) 2021 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1139,7 +1139,7 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
         }
         if(this.hasColumnNames() ^ df.hasColumnNames()){
             throw new DataFrameException("Cannot replace columns. "
-                    + "DataFrames must both be either labeled or unlabeled");
+                    + "DataFrames must be both either labeled or unlabeled");
         }
         this.flush();
         df.flush();
@@ -2721,7 +2721,9 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
         if((next == -1) || (row.length != columns.length)){
             throw new DataFrameException(
                     "Row length does not match number of columns: "
-                    + row.length);
+                    + row.length + " (the DataFrame has "
+                    + columns() + " columns)");
+
         }
         for(int i=0; i<columns.length; ++i){
             if((row[i] == null)
@@ -2730,18 +2732,19 @@ public final class DefaultDataFrame extends AbstractDataFrame implements DataFra
                 final String colname = columns[i].name;
                 final String colmsg = ((colname != null) && !colname.isEmpty())
                         ? "'" + colname + "'"
-                        : "index " + i;
+                        : "at index " + i;
 
                 if(row[i] == null){
                     throw new DataFrameException(String.format(
-                            "DefaultDataFrame cannot use null values (at column %s)",
+                            "DefaultDataFrame cannot use null values (for column %s)",
                             colmsg));
 
                 }else{
                     throw new DataFrameException(String.format(
-                            "Type missmatch at column %s. Expected %s but found %s",
-                            colmsg, columns[i].memberClass().getSimpleName(),
-                            row[i].getClass().getSimpleName()));
+                            "Invalid row item type at position %s for "
+                          + "column %s. Expected %s but found %s",
+                          i, colmsg, columns[i].memberClass().getSimpleName(),
+                          row[i].getClass().getSimpleName()));
 
                 }
             }

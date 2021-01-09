@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2020 Raven Computing
+ * Copyright (C) 2021 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -835,7 +835,8 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
             if(!resized && (col.capacity() > next)){
                 final int diff = (col.capacity() - next);
                 for(int i=0; i<diff; ++i){
-                    addRow(new Object[columns.length]);
+                    final Object[] nulls = new Object[columns.length];
+                    addRow(nulls);
                 }
             }
             col.matchLength(capacity());
@@ -880,8 +881,9 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
         }else{
             if(!resized && (col.capacity() > next)){
                 final int diff = (col.capacity() - next);
+                final Object[] nulls = new Object[columns.length];
                 for(int i=0; i<diff; ++i){
-                    addRow(new Object[columns.length]);
+                    addRow(nulls);
                 }
             }
             col.matchLength(capacity());
@@ -2808,7 +2810,9 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
         if((next == -1) || (row.length != columns.length)){
             throw new DataFrameException(
                     "Row length does not match number of columns: "
-                    + row.length);
+                    + row.length + " (the DataFrame has "
+                    + columns() + " columns)");
+
         }
         for(int i=0; i<columns.length; ++i){
             if(row[i] != null){
@@ -2816,12 +2820,13 @@ public final class NullableDataFrame extends AbstractDataFrame implements DataFr
                     final String colname = columns[i].name;
                     final String colmsg = ((colname != null) && !colname.isEmpty())
                             ? "'" + colname + "'"
-                            : "index " + i;
+                            : "at index " + i;
 
                     throw new DataFrameException(String.format(
-                            "Type missmatch at column %s. Expected %s but found %s",
-                            colmsg, columns[i].memberClass().getSimpleName(),
-                            row[i].getClass().getSimpleName()));
+                            "Invalid row item type at position %s for "
+                          + "column %s. Expected %s but found %s",
+                          i, colmsg, columns[i].memberClass().getSimpleName(),
+                          row[i].getClass().getSimpleName()));
 
                 }
             }

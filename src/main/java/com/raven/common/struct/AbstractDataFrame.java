@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2020 Raven Computing
+ * Copyright (C) 2021 Raven Computing
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -133,8 +133,10 @@ public abstract class AbstractDataFrame implements DataFrame {
         }
         if((next == -1) || (names.length != columns.length)){
             throw new DataFrameException(
-                    "Argument length does not match number of columns: "
-                    + names.length);
+                    "Length of column names array does not match number of "
+                  + "columns: " + names.length + " (the DataFrame has "
+                  + columns() + " columns)");
+
         }
         this.names = new HashMap<String, Integer>(16);
         for(int i=0; i<names.length; ++i){
@@ -1140,7 +1142,7 @@ public abstract class AbstractDataFrame implements DataFrame {
         }
         final Object[][] a = new Object[columns.length][next];
         for(int i=0; i<columns.length; ++i){
-            final Column c = getColumn(i).clone();
+            final Column c = getColumn(i);
             for(int j=0; j<next; ++j){
                 a[i][j] = c.getValue(j);
             }
