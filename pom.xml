@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.raven-computing</groupId>
   <artifactId>claymore</artifactId>
-  <version>4.0.2</version>
+  <version>4.0.3</version>
   <name>Claymore</name>
   <description>This is the open source Claymore library which provides additional core libraries for Java</description>
   <url>https://github.com/raven-computing/claymore</url>

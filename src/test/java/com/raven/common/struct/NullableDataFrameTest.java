@@ -39,6 +39,8 @@ public class NullableDataFrameTest {
     NullableDataFrame df;
     //DataFrame for sorting tests
     NullableDataFrame toBeSorted;
+    //Column type codes for conversion tests
+    byte[] columnTypes;
 
     @BeforeClass
     public static void setUpBeforeClass(){ }
@@ -120,6 +122,18 @@ public class NullableDataFrameTest {
                 new NullableBooleanColumn(new Boolean[]{
                         null,false,true,null,true
                 }));
+        
+        columnTypes = new byte[]{
+                NullableByteColumn.TYPE_CODE,
+                NullableShortColumn.TYPE_CODE,
+                NullableIntColumn.TYPE_CODE,
+                NullableLongColumn.TYPE_CODE,
+                NullableFloatColumn.TYPE_CODE,
+                NullableDoubleColumn.TYPE_CODE,
+                NullableStringColumn.TYPE_CODE,
+                NullableCharColumn.TYPE_CODE,
+                NullableBooleanColumn.TYPE_CODE,
+                NullableBinaryColumn.TYPE_CODE};
     }
 
     @After
@@ -2505,9 +2519,213 @@ public class NullableDataFrameTest {
         df1.intersectionRows(df2);
     }
 
+
+
+    //****************************************************//
+    //                 Convert Column Types               //
+    //****************************************************//
+
+
+
+    @Test
+    public void testConvertFromByteColumn(){
+        df.addColumn(new NullableByteColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? (byte)0 : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone().convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromShortColumn(){
+        df.addColumn(new NullableShortColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? (short)0 : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone().convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromIntColumn(){
+        df.addColumn(new NullableIntColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? 0 : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone().convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromLongColumn(){
+        df.addColumn(new NullableLongColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? 0L : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone().convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromFloatColumn(){
+        df.addColumn(new NullableFloatColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? 0.0f : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone().convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromDoubleColumn(){
+        df.addColumn(new NullableDoubleColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? 0.0 : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone().convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromStringColumn(){
+        df.addColumn(new NullableStringColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? "0" : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone();
+            if(code == NullableBinaryColumn.TYPE_CODE){
+                df2.replace("data", "0", "00");
+            }
+            df2 = df2.convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            //only keep the first character to match the original string
+            //when converting back from float and double
+            df2.replace("data", (String v) -> (v != null) ? v.substring(0, 1) : null);
+            //change correctly from boolean values
+            df2.replace("data", "f", "0");
+            df2.replace("data", "t", "1");
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromCharColumn(){
+        df.addColumn(new NullableCharColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? '0' : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone().convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromBooleanColumn(){
+        df.addColumn(new NullableBooleanColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0 ? false : null);
+        for(byte code : columnTypes){
+            DataFrame df2 = df.clone().convert("data", code);
+            df2 = df2.convert("data", df.getColumn("data").typeCode());
+            assertTrue("Conversion failure", df2.equals(df));
+        }
+    }
+
+    @Test
+    public void testConvertFromBinaryColumn(){
+        df.addColumn(new NullableBinaryColumn("data"));
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? BitVector.fromHexString("00").asArray()
+                : null);
+
+        DataFrame df2 = df.clone().convert("data", NullableByteColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? BitVector.fromHexString("0000").asArray()
+                : null);
+
+        df2 = df.clone().convert("data", NullableShortColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? BitVector.fromHexString("00000000").asArray()
+                : null);
+
+        df2 = df.clone().convert("data", NullableIntColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data",(i, v) -> i % 2 == 0
+                ? BitVector.fromHexString("0000000000000000").asArray()
+                : null);
+
+        df2 = df.clone().convert("data", NullableLongColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? BitVector.valueOf(0.0f).asArray()
+                : null);
+
+        df2 = df.clone().convert("data", NullableFloatColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? BitVector.valueOf(0.0).asArray()
+                : null);
+
+        df2 = df.clone().convert("data", NullableDoubleColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? new byte[]{0x30}
+                : null);
+
+        df2 = df.clone().convert("data", NullableStringColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? new byte[]{0x30}
+                : null);
+
+        df2 = df.clone().convert("data", NullableCharColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? BitVector.fromHexString("00").asArray()
+                : null);
+
+        df2 = df.clone().convert("data", NullableBooleanColumn.TYPE_CODE);
+        df2 = df2.convert("data", df.getColumn("data").typeCode());
+        assertTrue("Conversion failure", df2.equals(df));
+
+        df.replace("data", (i, v) -> i % 2 == 0
+                ? BitVector.fromHexString("00").asArray()
+                : null);
+
+        df2 = df.clone().convert("data", NullableBinaryColumn.TYPE_CODE);
+        assertTrue("Conversion failure", df2.equals(df));
+    }
+
+
+
     //****************************************//
     //           GroupBy operations           //
     //****************************************//
+
+
 
     @Test
     public void testGroupMinimumBy(){
@@ -3806,9 +4024,9 @@ public class NullableDataFrameTest {
         assertTrue("Capacity should be 14", df.capacity() == 14);
     }
 
-    //***************************************//
-    //          Equals and HashCode          //
-    //***************************************//
+    //********************************************//
+    //          Equals, HashCode and Info         //
+    //********************************************//
 
     @Test
     public void testEqualsHashCodeContract(){
@@ -3844,6 +4062,33 @@ public class NullableDataFrameTest {
         //change to make unequal
         test1.setByte("BYTE", 2, (byte)4);
         assertFalse("Equals method should return false", test1.equals(test2));
+    }
+
+    @Test
+    public void testInfo(){
+        String s = df.info();
+        assertFalse("Returned String should not be null", s == null);
+        assertFalse("Returned String should not be empty", s.isEmpty());
+    }
+
+    @Test
+    public void testInfoWithEmptyDataFrame(){
+        df.clear();
+        String s = df.info();
+        assertFalse("Returned String should not be null", s == null);
+        assertFalse("Returned String should not be empty", s.isEmpty());
+        df.flush();
+        s = df.info();
+        assertFalse("Returned String should not be null", s == null);
+        assertFalse("Returned String should not be empty", s.isEmpty());
+    }
+
+    @Test
+    public void testInfoWithUninitializedDataFrame(){
+        DataFrame test = new NullableDataFrame();
+        String s = test.info();
+        assertFalse("Returned String should not be null", s == null);
+        assertFalse("Returned String should not be empty", s.isEmpty());
     }
 
 }

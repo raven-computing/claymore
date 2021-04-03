@@ -1099,9 +1099,6 @@ public abstract class AbstractDataFrame implements DataFrame {
 
     @Override
     public String info(){
-        if(columns == null){
-            return "uninitialized DataFrame instance";
-        }
         final StringBuilder sb = new StringBuilder();
         final String nl = System.lineSeparator();
         sb.append("Type:    ");
@@ -1114,6 +1111,10 @@ public abstract class AbstractDataFrame implements DataFrame {
         sb.append("Rows:    ");
         sb.append(rows());
         sb.append(nl);
+
+        if(columns == null){
+            return sb.toString();
+        }
         final DataFrame types = new DefaultDataFrame(
                 new StringColumn("column", cols),
                 new StringColumn("type", cols),

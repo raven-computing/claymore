@@ -322,7 +322,7 @@ public class ObservableItem<V> implements Item<V> {
         private V oldValue;
 
         Change(final Event event, final Item<V> item,
-                final String oldKey,final V oldValue){
+               final String oldKey,final V oldValue){
 
             this.event = event;
             this.item = item;

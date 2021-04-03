@@ -25,6 +25,7 @@ import org.junit.runners.Suite.SuiteClasses;
     DataFrameUtilsTest.class,
     DefaultDataFrameTest.class,
     NullableDataFrameTest.class,
+    ColumnTest.class,
     WritableItemTest.class,
     BitVectorTest.class,
     StaticBloomFilterTest.class,

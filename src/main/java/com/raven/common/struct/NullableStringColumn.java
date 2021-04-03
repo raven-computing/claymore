@@ -367,7 +367,7 @@ public final class NullableStringColumn extends NullableColumn {
             final byte[][] bins = new byte[entries.length][];
             for(int i=0; i<entries.length; ++i){
                 if(entries[i] != null){
-                    bins[i] = entries[i].getBytes(StandardCharsets.UTF_8);
+                    bins[i] = BinaryColumn.bytesFromHex(entries[i]);
                 }else{
                     bins[i] = new byte[]{0};
                 }
@@ -482,7 +482,7 @@ public final class NullableStringColumn extends NullableColumn {
             final byte[][] binsn = new byte[entries.length][];
             for(int i=0; i<entries.length; ++i){
                 if(entries[i] != null){
-                    binsn[i] = entries[i].getBytes(StandardCharsets.UTF_8);
+                    binsn[i] = BinaryColumn.bytesFromHex(entries[i]);
                 }else{
                     binsn[i] = null;
                 }

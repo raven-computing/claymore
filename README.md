@@ -1,6 +1,6 @@
 # Claymore: Additional Core Libraries for Java
 
-[![Release](https://img.shields.io/badge/Release-4.0.2-blue.svg)](https://raven-computing.com/products/claymore) [![Download](https://img.shields.io/badge/Download-jar-blue.svg)](https://repo1.maven.org/maven2/com/raven-computing/claymore/4.0.2/)
+[![Release](https://img.shields.io/badge/Release-4.0.3-blue.svg)](https://raven-computing.com/products/claymore) [![Download](https://img.shields.io/badge/Download-jar-blue.svg)](https://repo1.maven.org/maven2/com/raven-computing/claymore/4.0.3/)
 
 Claymore is a set of core libraries which are often used in our Java projects. We wanted to make some of them open source in the hope that others might find them useful. The provided APIs are complementary to the standard Java libraries, for example by adding support for DataFrames, readers/writers for CSV-files, a parser for command line arguments, and more.
 
@@ -13,16 +13,16 @@ Claymore is available on the Maven central repository. In order to use Claymore 
 <dependency>
   <groupId>com.raven-computing</groupId>
   <artifactId>claymore</artifactId>
-  <version>4.0.2</version>
+  <version>4.0.3</version>
 </dependency>
 ```
 
 #### Gradle
 ```
-implementation 'com.raven-computing:claymore:4.0.2'
+implementation 'com.raven-computing:claymore:4.0.3'
 ```
 
-For more information see [search.maven.org](https://search.maven.org/artifact/com.raven-computing/claymore/4.0.2/jar).
+For more information see [search.maven.org](https://search.maven.org/artifact/com.raven-computing/claymore/4.0.3/jar).
 
 ## Compatibility
 
@@ -45,7 +45,7 @@ Use Maven to build the artifacts:
 mvn package
 ```
 
-### Running Tests
+### Run Tests
 
 Execute all unit test:
 ```

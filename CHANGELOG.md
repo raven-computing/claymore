@@ -1,3 +1,7 @@
+#### 4.0.3
+* Changed info string to standard representation for uninitialized DataFrames in info() method.
+* Fixed some errors in Column conversions.
+
 #### 4.0.2
 * Changed NullableDataFrame.addColumn() methods to cache row objects
 * Changed AbstractDataFrame.toArray() to avoid unnecessary clone operation

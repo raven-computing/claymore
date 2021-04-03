@@ -375,8 +375,8 @@ public final class BinaryColumn extends Column {
                             isZero = false;
                             break;
                         }
-                        bools[i] = !isZero;
                     }
+                    bools[i] = !isZero;
                 }else{
                     bools[i] = false;
                 }
@@ -507,8 +507,8 @@ public final class BinaryColumn extends Column {
                             isZero = false;
                             break;
                         }
-                        boolsn[i] = !isZero;
                     }
+                    boolsn[i] = !isZero;
                 }else{
                     boolsn[i] = null;
                 }
@@ -603,5 +603,52 @@ public final class BinaryColumn extends Column {
 
             }
         }
+    }
+
+    /**
+     * Returns a byte array from the specified String object in hexadecimal notation.
+     * The given String should only be composed of the characters 0-9
+     * and a-f (case insensitive). If the string passed to this method is empty,
+     * a byte array with one zero byte is returned
+     * 
+     * @param string The String containing the hexadecimal digits which represent
+     *               the content of the byte array to be returned. Must not be null
+     * @return A byte array from the specified String in hexadecimal notation
+     * @throws NumberFormatException If the specified String contains
+     *                               invalid hex characters
+     */
+    protected static byte[] bytesFromHex(final String string){
+        if(string == null){
+            throw new IllegalArgumentException("String argument must not be null");
+        }
+        if(string.isEmpty()){
+            return new byte[]{0x00};
+        }
+        if(string.length() == 1){
+            return new byte[]{(byte)(Character.digit(string.charAt(0), 16) << 4)};
+        }
+        final int mod = (string.length() % 2);
+        final int length = (string.length() + mod);
+        final byte[] bytes = new byte[length / 2];
+        final int max = ((mod == 0) ? length : (length - 1));
+        for(int i=0; i<max; ++i){
+            final char c = string.charAt(i);
+            //check that the char is a valid hex digit
+            if(!((c >= 48) && (c <= 57))            // 0-9
+                    && !((c >= 65) && (c <= 70))    // A-F
+                    && !((c >= 97) && (c <= 102))){ // a-f
+                
+                throw new NumberFormatException(
+                        "Invalid hex character: '"
+                        + String.valueOf(c)
+                        + "' (at index " + i + ")");
+
+            }
+            bytes[i / 2] |= (byte) ((i%2 == 0)
+                    ? (Character.digit(c, 16) << 4)
+                    : (Character.digit(c, 16)));
+            
+        }
+        return bytes;
     }
 }
